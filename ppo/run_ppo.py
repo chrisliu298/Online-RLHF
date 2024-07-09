@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import torch
@@ -99,11 +99,47 @@ class ScriptArguments:
     )
 
 
+@dataclass
+class DataCollatorWithPadding:
+    tokenizer: AutoTokenizer
+    padding: Union[bool, str] = True
+    max_length: Optional[int] = None
+    pad_to_multiple_of: Optional[int] = None
+    return_tensors: str = "pt"
+
+    def __call__(self, features: List[Dict[str, Any]]) -> Dict[str, Any]:
+        merged_features = []
+
+        for feature in features:
+            merged_features.append(
+                {
+                    "input_ids": feature["input_ids"],
+                    "attention_mask": feature["attention_mask"],
+                }
+            )
+        batch = self.tokenizer.pad(
+            merged_features,
+            padding=self.padding,
+            max_length=self.max_length,
+            pad_to_multiple_of=self.pad_to_multiple_of,
+            return_tensors=self.return_tensors,
+        )
+        batch = {
+            "input_ids": batch["input_ids"],
+            "attention_mask": batch["attention_mask"],
+            "return_loss": True,
+        }
+        return batch
+
+
 def tokenize(sample):
-    input_ids = tokenizer.apply_chat_template(
-        sample["context_messages"], padding=False, add_generation_prompt=True
+    formatted = tokenizer.apply_chat_template(
+        sample["context_messages"], tokenize=True, add_generation_prompt=True
     )
-    return {"input_ids": input_ids, "lengths": len(input_ids)}
+    return {
+        "input_ids": formatted["input_ids"],
+        "attention_mask": formatted["attention_mask"],
+    }
 
 
 if __name__ == "__main__":
@@ -155,6 +191,9 @@ if __name__ == "__main__":
             model.resize_token_embeddings(len(tokenizer))
             model_ref.resize_token_embeddings(len(tokenizer))
             print(f"Added padding token: {tokenizer.pad_token}")
+
+    tokenizer.truncation_side = "left"
+    tokenizer.model_max_length = 4096
 
     # 2. Load the Stack-exchange paired dataset
     rng = np.random.default_rng(seed=42)
@@ -234,6 +273,9 @@ if __name__ == "__main__":
         value_model=model_value,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
+        data_collator=DataCollatorWithPadding(
+            tokenizer, max_length=tokenizer.model_max_length
+        ),
     )
     print("begin to train")
 

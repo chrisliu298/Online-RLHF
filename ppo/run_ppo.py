@@ -101,7 +101,7 @@ class ScriptArguments:
 
 def tokenize(sample):
     input_ids = tokenizer.apply_chat_template(
-        sample["context_messages"][0], padding=False, add_generation_prompt=True
+        sample["context_messages"], padding=False, add_generation_prompt=True
     )
     return {"input_ids": input_ids, "lengths": len(input_ids)}
 

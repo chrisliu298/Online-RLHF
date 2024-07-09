@@ -86,6 +86,17 @@ class ScriptArguments:
             "https://github.com/huggingface/transformers/issues/22482#issuecomment-1595790992"
         },
     )
+    local_rank: Optional[int] = field(
+        default=-1, metadata={"help": "local rank for distributed training"}
+    )
+    bf16: Optional[bool] = field(
+        default=True, metadata={"help": "whether to use bfloat16"}
+    )
+
+    # output directory
+    output_dir: Optional[str] = field(
+        default="output", metadata={"help": "the output directory"}
+    )
 
 
 def tokenize(sample):
@@ -195,7 +206,6 @@ if __name__ == "__main__":
         adam_beta2=0.95,
         adam_epsilon=1e-5,
         save_steps=script_args.save_steps,
-        deepspeed=script_args.deepspeed,
         local_rank=script_args.local_rank,
         bf16=script_args.bf16,
         logging_strategy="steps",

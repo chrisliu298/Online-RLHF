@@ -117,10 +117,7 @@ class DataCollatorWithPadding:
         #             "attention_mask": feature["attention_mask"],
         #         }
         #     )
-        merged_features = {
-            "input_ids": features["input_ids"],
-            "attention_mask": features["attention_mask"],
-        }
+        merged_features = {"input_ids": features["input_ids"]}
         batch = self.tokenizer.pad(
             merged_features,
             padding=self.padding,
@@ -128,11 +125,7 @@ class DataCollatorWithPadding:
             pad_to_multiple_of=self.pad_to_multiple_of,
             return_tensors=self.return_tensors,
         )
-        batch = {
-            "input_ids": batch["input_ids"],
-            "attention_mask": batch["attention_mask"],
-            "return_loss": True,
-        }
+        batch = {"input_ids": batch["input_ids"]}
         return batch
 
 

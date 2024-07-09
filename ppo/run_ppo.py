@@ -259,6 +259,6 @@ if __name__ == "__main__":
     ppo_trainer.train()
     ppo_trainer.save_model(script_args.output_dir)
 
-    # 7. save
-    output_dir = os.path.join(script_args.output_dir, "final_checkpoint")
-    ppo_trainer.model.save_pretrained(output_dir)
+    # 7. save policy and value model
+    model.save_pretrained(os.path.join(script_args.output_dir, "policy"))
+    model_value.save_pretrained(os.path.join(script_args.output_dir, "value"))

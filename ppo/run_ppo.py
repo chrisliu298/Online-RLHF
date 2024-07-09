@@ -100,6 +100,9 @@ class ScriptArguments:
     num_sample_generations: Optional[int] = field(
         default=1, metadata={"help": "the number of sample generations"}
     )
+    local_rollout_forward_batch_size: Optional[int] = field(
+        default=1, metadata={"help": "the number of forward rollouts"}
+    )
 
 
 def tokenize(sample):
@@ -196,7 +199,7 @@ if __name__ == "__main__":
         # PPOv2 arguments
         num_mini_batches=1,
         total_episodes=None,
-        local_rollout_forward_batch_size=64,
+        local_rollout_forward_batch_size=script_args.local_rollout_forward_batch_size,
         num_sample_generations=script_args.num_sample_generations,
         base_model=script_args.model_name_or_path,
         response_length=1024,

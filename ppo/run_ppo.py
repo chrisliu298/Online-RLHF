@@ -173,8 +173,8 @@ if __name__ == "__main__":
         print(f"Using {len(train_dataset)} training samples")
         print(f"Using {len(eval_dataset)} evaluation samples")
 
-        train_dataset = train_dataset.map(tokenize, batched=True, num_proc=32)
-        eval_dataset = eval_dataset.map(tokenize, batched=True, num_proc=32)
+        train_dataset = train_dataset.map(tokenize, num_proc=32)
+        eval_dataset = eval_dataset.map(tokenize, num_proc=32)
 
     # 4. initialize training arguments:
     ppo_config = PPOv2Config(

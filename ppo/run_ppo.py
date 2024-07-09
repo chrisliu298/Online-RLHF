@@ -95,7 +95,7 @@ class ScriptArguments:
 
     # output directory
     output_dir: Optional[str] = field(
-        default="output", metadata={"help": "the output directory"}
+        default="ppo_models", metadata={"help": "the output directory"}
     )
 
 

@@ -134,12 +134,10 @@ class DataCollatorWithPadding:
 
 def tokenize(sample):
     formatted = tokenizer.apply_chat_template(
-        sample["context_messages"], tokenize=True, add_generation_prompt=True
-    )
-    return {
-        "input_ids": formatted["input_ids"],
-        "attention_mask": formatted["attention_mask"],
-    }
+        sample["context_messages"], tokenize=False, add_generation_prompt=True
+    ).replace(tokenizer.bos_token, "")
+    tokenized = tokenizer(formatted, truncation=True)
+    return tokenized
 
 
 if __name__ == "__main__":

@@ -173,7 +173,7 @@ if __name__ == "__main__":
         penalty_reward_value=-10.0,
         non_eos_penalty=False,
         reward_model_path=script_args.reward_model,
-        sft_model_path=script_args.ref_model,
+        sft_model_path=script_args.model_name_or_path,
         num_ppo_epochs=4,
         vf_coef=0.1,
         cliprange=0.2,

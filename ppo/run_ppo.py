@@ -35,7 +35,7 @@ class ScriptArguments:
     lr_scheduler_type: Optional[str] = field(
         default="constant_with_warmup", metadata={"help": "the lr scheduler type"}
     )
-    warmup_ratio: Optional[int] = field(
+    warmup_ratio: Optional[float] = field(
         default=0.1, metadata={"help": "the percentage of warmup steps"}
     )
     weight_decay: Optional[float] = field(

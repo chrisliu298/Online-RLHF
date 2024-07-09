@@ -41,7 +41,7 @@ class ScriptArguments:
     weight_decay: Optional[float] = field(
         default=0.0, metadata={"help": "the weight decay"}
     )
-    optimizer_type: Optional[str] = field(
+    optim: Optional[str] = field(
         default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
     )
 
@@ -211,7 +211,7 @@ if __name__ == "__main__":
         logging_strategy="steps",
         logging_steps=script_args.logging_steps,
         eval_steps=script_args.eval_steps,
-        optimizer_type=script_args.optimizer_type,
+        optim=script_args.optim,
         lr_scheduler_type=script_args.lr_scheduler_type,
         warmup_ratio=script_args.warmup_ratio,
         report_to="wandb",

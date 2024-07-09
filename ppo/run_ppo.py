@@ -158,18 +158,18 @@ if __name__ == "__main__":
 
     # 2. Load the Stack-exchange paired dataset
     rng = np.random.default_rng(seed=42)
-    train_dataset = load_dataset("prompt-collection-v0.1", split="train")
-    full_indices = rng.choice(len(train_dataset), len(train_dataset), replace=False)
+    full_dataset = load_dataset("prompt-collection-v0.1", split="train")
+    full_indices = rng.choice(len(full_dataset), len(full_dataset), replace=False)
     if script_args.max_training_samples > 0:
         train_indices = rng.choice(
-            len(train_dataset), script_args.max_training_samples, replace=False
+            len(full_dataset), script_args.max_training_samples, replace=False
         )
-        train_dataset = train_dataset.select(train_indices)
+        train_dataset = full_dataset.select(train_indices)
         rest_indices = np.setdiff1d(full_indices, train_indices)
         eval_indices = rng.choice(
             rest_indices, min(1000, len(rest_indices)), replace=False
         )
-        eval_dataset = train_dataset.select(eval_indices)
+        eval_dataset = full_dataset.select(eval_indices)
         print(f"Using {len(train_dataset)} training samples")
         print(f"Using {len(eval_dataset)} evaluation samples")
 

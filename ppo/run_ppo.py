@@ -108,15 +108,19 @@ class DataCollatorWithPadding:
     return_tensors: str = "pt"
 
     def __call__(self, features: List[Dict[str, Any]]) -> Dict[str, Any]:
-        merged_features = []
+        # merged_features = []
 
-        for feature in features:
-            merged_features.append(
-                {
-                    "input_ids": feature["input_ids"],
-                    "attention_mask": feature["attention_mask"],
-                }
-            )
+        # for feature in features:
+        #     merged_features.append(
+        #         {
+        #             "input_ids": feature["input_ids"],
+        #             "attention_mask": feature["attention_mask"],
+        #         }
+        #     )
+        merged_features = {
+            "input_ids": features["input_ids"],
+            "attention_mask": features["attention_mask"],
+        }
         batch = self.tokenizer.pad(
             merged_features,
             padding=self.padding,

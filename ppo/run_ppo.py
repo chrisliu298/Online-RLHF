@@ -21,6 +21,10 @@ class ScriptArguments:
     """
 
     # training parameters
+    dataset_name_or_path: Optional[str] = field(
+        default="prompt-collection-v0.1",
+        metadata={"help": "the location of the dataset name or path"},
+    )
     model_name_or_path: Optional[str] = field(
         default="gemma-2b-it",
         metadata={"help": "the location of the model name or path"},
@@ -168,7 +172,7 @@ if __name__ == "__main__":
 
     # 2. Load the Stack-exchange paired dataset
     rng = np.random.default_rng(seed=42)
-    full_dataset = load_dataset("prompt-collection-v0.1", split="train")
+    full_dataset = load_dataset(script_args.dataset_name_or_path, split="train")
     full_indices = rng.choice(len(full_dataset), len(full_dataset), replace=False)
     if script_args.max_training_samples > 0:
         train_indices = rng.choice(

@@ -261,4 +261,6 @@ if __name__ == "__main__":
 
     # 7. save policy and value model
     model.save_pretrained(os.path.join(script_args.output_dir, "policy"))
+    tokenizer.save_pretrained(os.path.join(script_args.output_dir, "policy"))
     model_value.save_pretrained(os.path.join(script_args.output_dir, "value"))
+    tokenizer.save_pretrained(os.path.join(script_args.output_dir, "value"))

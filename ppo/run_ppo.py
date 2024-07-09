@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional
 
 import numpy as np
 import torch
@@ -99,29 +99,6 @@ class ScriptArguments:
     )
 
 
-@dataclass
-class DataCollatorWithPadding:
-    tokenizer: AutoTokenizer
-    padding: Union[bool, str] = True
-    max_length: Optional[int] = None
-    pad_to_multiple_of: Optional[int] = None
-    return_tensors: str = "pt"
-
-    def __call__(self, features: List[Dict[str, Any]]) -> Dict[str, Any]:
-        # merged_features = {"input_ids": features["input_ids"]}
-        input_ids = [feature["input_ids"] for feature in features]
-        merged_features = {"input_ids": input_ids}
-        batch = self.tokenizer.pad(
-            merged_features,
-            padding=self.padding,
-            max_length=self.max_length,
-            pad_to_multiple_of=self.pad_to_multiple_of,
-            return_tensors=self.return_tensors,
-        )
-        batch = {"input_ids": batch["input_ids"]}
-        return batch
-
-
 def tokenize(sample):
     formatted = tokenizer.apply_chat_template(
         sample["context_messages"], tokenize=False, add_generation_prompt=True
@@ -200,8 +177,16 @@ if __name__ == "__main__":
         print(f"Using {len(train_dataset)} training samples")
         print(f"Using {len(eval_dataset)} evaluation samples")
 
-        train_dataset = train_dataset.map(tokenize, num_proc=32)
-        eval_dataset = eval_dataset.map(tokenize, num_proc=32)
+        train_dataset = train_dataset.map(
+            tokenize,
+            num_proc=32,
+            remove_columns=["dataset", "context", "context_messages", "id"],
+        )
+        eval_dataset = eval_dataset.map(
+            tokenize,
+            num_proc=32,
+            remove_columns=["dataset", "context", "context_messages", "id"],
+        )
 
     # 4. initialize training arguments:
     ppo_config = PPOv2Config(
@@ -261,9 +246,6 @@ if __name__ == "__main__":
         value_model=model_value,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        data_collator=DataCollatorWithPadding(
-            tokenizer, max_length=tokenizer.model_max_length
-        ),
     )
     print("begin to train")
 

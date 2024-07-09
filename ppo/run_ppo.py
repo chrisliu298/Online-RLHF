@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     # 2. Load the Stack-exchange paired dataset
     rng = np.random.default_rng(seed=42)
-    train_dataset = load_dataset("RLHFlow/prompt-collection-v0.1", split="train")
+    train_dataset = load_dataset("prompt-collection-v0.1", split="train")
     indices = rng.choice(len(train_dataset), len(train_dataset), replace=False)
     if script_args.max_training_samples > 0:
         indices = rng.choice(

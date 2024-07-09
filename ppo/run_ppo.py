@@ -158,7 +158,7 @@ if __name__ == "__main__":
             print(f"Added padding token: {tokenizer.pad_token}")
 
     tokenizer.truncation_side = "left"
-    tokenizer.model_max_length = 4096
+    # tokenizer.model_max_length = 4096
 
     # 2. Load the Stack-exchange paired dataset
     rng = np.random.default_rng(seed=42)
@@ -201,10 +201,10 @@ if __name__ == "__main__":
         stop_token_id=None,
         temperature=0.7,
         penalty_reward_value=-10.0,
-        non_eos_penalty=False,
+        non_eos_penalty=True,
         reward_model_path=script_args.reward_model,
         sft_model_path=script_args.model_name_or_path,
-        num_ppo_epochs=4,
+        num_ppo_epochs=script_args.num_train_epochs,
         vf_coef=0.1,
         cliprange=0.2,
         cliprange_value=0.2,

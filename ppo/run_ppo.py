@@ -11,7 +11,7 @@ from transformers import (
     AutoTokenizer,
     HfArgumentParser,
 )
-from trl import PPOv2Config, PPOv2Trainer
+from trl.trainer.ppov2_trainer import PPOv2Config, PPOv2Trainer
 
 
 @dataclass

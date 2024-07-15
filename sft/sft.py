@@ -90,7 +90,7 @@ class ScriptArguments:
 
     def __post_init__(self):
         if self.output_dir == "./sft_models":
-            self.output_dir = f"./sft_models/{self.model_name}-sft"
+            self.output_dir = f"./sft_models/{self.model_name}_{self.dataset_name}"
 
 
 parser = HfArgumentParser(ScriptArguments)

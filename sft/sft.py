@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -147,7 +148,7 @@ def formatting_prompts_func(example):
     return {"text": tokenizer.apply_chat_template(example["messages"], tokenize=False)}
 
 
-ds = dataset.map(formatting_prompts_func, batched=False)
+ds = dataset.map(formatting_prompts_func, batched=False, num_proc=os.cpu_count())
 # formatting_prompts_func
 
 trainer = SFTTrainer(

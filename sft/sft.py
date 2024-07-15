@@ -24,7 +24,9 @@ class ScriptArguments:
     what their capacity and features are, and what size model you want to train.
     """
 
-    local_rank: Optional[int] = field(default=-1, metadata={"help": "Used for multi-gpu"})
+    local_rank: Optional[int] = field(
+        default=-1, metadata={"help": "Used for multi-gpu"}
+    )
     resume_from_checkpoint: Optional[bool] = field(
         default=False,
         metadata={"help": "If you want to resume training where it left off."},
@@ -78,10 +80,16 @@ class ScriptArguments:
         metadata={"help": "The lr scheduler"},
     )
 
-    max_training_samples: Optional[int] = field(default=-1, metadata={"help": "the maximum sample size"})
+    max_training_samples: Optional[int] = field(
+        default=-1, metadata={"help": "the maximum sample size"}
+    )
 
     max_length: Optional[int] = field(default=4096)
-    output_dir: Optional[str] = field(default="./models/sft_model_llama3")
+    output_dir: Optional[str] = field(default="./sft_models")
+
+    def __post_init__(self):
+        if self.output_dir == "./sft_models":
+            self.output_dir = f"./sft_models/{self.model_name}-sft"
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -120,9 +128,14 @@ if script_args.max_training_samples > 0:
     dataset = dataset.select(range(script_args.max_training_samples))
 
 model = AutoModelForCausalLM.from_pretrained(
-    script_args.model_name, torch_dtype=torch.bfloat16, use_flash_attention_2=True, trust_remote_code=True
+    script_args.model_name,
+    torch_dtype=torch.bfloat16,
+    use_flash_attention_2=True,
+    trust_remote_code=True,
 ).to("cuda")
-tokenizer = AutoTokenizer.from_pretrained(script_args.model_name, trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    script_args.model_name, trust_remote_code=True
+)
 tokenizer.pad_token = tokenizer.eos_token
 print("We set the pad token as the eos token by default....")
 # tokenizer.truncation_side = "left"

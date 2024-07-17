@@ -287,6 +287,7 @@ class PreferenceTrainer(DPOTrainer):
         compute_metrics: Optional[Callable[[EvalLoopOutput], Dict]] = None,
         mask_prompt: Optional[bool] = False,
         len_penalty: float = 0,
+        tokenize_func: Optional[Callable[[str], List[str]]] = None,
     ):
 
         if data_collator is None:
@@ -326,6 +327,7 @@ class PreferenceTrainer(DPOTrainer):
             disable_dropout=disable_dropout,
             generate_during_eval=generate_during_eval,
             compute_metrics=compute_metrics,
+            tokenize_func=tokenize_func,
         )
         self.use_dpo_data_collator = True
         self.len_penalty = len_penalty

@@ -441,19 +441,13 @@ class PreferenceTrainer(DPOTrainer):
         with torch.no_grad():
             if self.ref_model is None:
                 with self.accelerator.unwrap_model(self.model).disable_adapter():
-                    (
-                        reference_chosen_logps,
-                        reference_rejected_logps,
-                        _,
-                        _,
-                    ) = self.concatenated_forward(self.model, batch)
+                    (reference_chosen_logps, reference_rejected_logps, _, _, _) = (
+                        self.concatenated_forward(self.model, batch)
+                    )
             else:
-                (
-                    reference_chosen_logps,
-                    reference_rejected_logps,
-                    _,
-                    _,
-                ) = self.concatenated_forward(self.ref_model, batch)
+                (reference_chosen_logps, reference_rejected_logps, _, _, _) = (
+                    self.concatenated_forward(self.ref_model, batch)
+                )
         if self.len_penalty > 0:
             chosen_len = batch["chosen_input_ids"].shape[1] * self.len_penalty
             rejected_len = batch["rejected_input_ids"].shape[1] * self.len_penalty

@@ -35,7 +35,7 @@ class ScriptArguments:
         metadata={"help": "the location of the SFT model name or path"},
     )
     train_dir: Optional[str] = field(
-        default="./mnt/data2/yuhaoliu/hf_datasets/UltraFeedback-preference-standard_processed",
+        default="/mnt/data2/yuhaoliu/hf_datasets/UltraFeedback-preference-standard_processed",
         metadata={"help": "the location of the dataset name or path"},
     )
     learning_rate: Optional[float] = field(

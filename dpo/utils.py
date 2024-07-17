@@ -1,13 +1,8 @@
 import inspect
-from typing import Optional, Union, Dict
-from transformers import PreTrainedModel
-import torch
-from torch import nn
+from typing import Dict
 
 
-def tokenize_row(
-    self, feature, model: Optional[Union[PreTrainedModel, nn.Module]] = None
-) -> Dict:
+def tokenize_row(self, feature) -> Dict:
     """Tokenize a single row from a DPO specific dataset.
 
     At this stage, we don't convert to PyTorch tensors yet; we just handle the truncation
@@ -223,19 +218,5 @@ def tokenize_row(
         batch["rejected_labels"] = rejected_tokens["input_ids"]
         batch["prompt_input_ids"] = prompt_tokens["input_ids"]
         batch["prompt_attention_mask"] = prompt_tokens["attention_mask"]
-
-        if model is not None and hasattr(
-            model, "prepare_decoder_input_ids_from_labels"
-        ):
-            batch["rejected_decoder_input_ids"] = (
-                model.prepare_decoder_input_ids_from_labels(
-                    labels=torch.tensor(batch["rejected_labels"])
-                )
-            )
-            batch["chosen_decoder_input_ids"] = (
-                model.prepare_decoder_input_ids_from_labels(
-                    labels=torch.tensor(batch["chosen_labels"])
-                )
-            )
 
     return batch

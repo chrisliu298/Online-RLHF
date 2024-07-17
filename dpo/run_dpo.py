@@ -2,17 +2,12 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 
-import numpy as np
 import torch
-from datasets import Dataset, load_dataset, load_from_disk
+from datasets import load_from_disk
 from dpo import PreferenceTrainer
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    HfArgumentParser,
-    TrainingArguments,
-)
+from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 from trl import DPOConfig
+from utils import tokenize_row
 
 
 @dataclass
@@ -196,6 +191,7 @@ if __name__ == "__main__":
         max_length=script_args.max_length,
         mask_prompt=script_args.mask_prompt,
         len_penalty=script_args.len_penalty,
+        tokenize_func=tokenize_row,
     )
     print("begin to train")
 

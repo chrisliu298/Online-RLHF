@@ -12,6 +12,7 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
 )
+from trl import DPOConfig
 
 
 @dataclass
@@ -159,7 +160,7 @@ if __name__ == "__main__":
 
     # 4. initialize training arguments:
 
-    training_args = TrainingArguments(
+    training_args = DPOConfig(
         per_device_train_batch_size=script_args.per_device_train_batch_size,
         num_train_epochs=script_args.num_train_epochs,
         save_strategy=script_args.save_strategy,
@@ -177,6 +178,7 @@ if __name__ == "__main__":
         bf16=True,
         remove_unused_columns=False,
         run_name=script_args.run_name,
+        dataset_num_proc=os.cpu_count(),
     )
     print(training_args)
 

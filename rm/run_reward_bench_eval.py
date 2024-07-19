@@ -71,10 +71,12 @@ def change_of_format(prompt, resp):
         {"role": "user", "content": prompt},
         {"role": "assistant", "content": resp},
     ]
-
-    return rm_tokenizer.apply_chat_template(message, tokenize=False).replace(
-        rm_tokenizer.bos_token, ""
-    )
+    try:
+        return rm_tokenizer.apply_chat_template(message, tokenize=False).replace(
+            rm_tokenizer.bos_token, ""
+        )
+    except:
+        return rm_tokenizer.apply_chat_template(message, tokenize=False)
 
 
 def get_reward(test_texts):

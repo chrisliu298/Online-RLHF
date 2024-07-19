@@ -172,7 +172,7 @@ if __name__ == "__main__":
         bf16=True,
         remove_unused_columns=False,
         run_name=script_args.run_name,
-        dataset_num_proc=os.cpu_count(),
+        dataset_num_proc=None,
     )
     print(training_args)
 

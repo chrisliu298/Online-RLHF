@@ -2,6 +2,7 @@
 Taken from https://github.com/RLHFlow/RLHF-Reward-Modeling/blob/main/useful_code/eval_reward_bench_bt.py
 """
 
+import warnings
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -10,6 +11,8 @@ import torch
 from datasets import load_dataset
 from tqdm import tqdm
 from transformers import AutoTokenizer, HfArgumentParser, pipeline
+
+warnings.filterwarnings("ignore")
 
 tqdm.pandas()
 
@@ -24,7 +27,7 @@ class ScriptArguments:
         default="reward-bench",
         metadata={"help": "the location of the dataset name or path"},
     )
-    record_dir: Optional[str] = field(
+    output_path: Optional[str] = field(
         default="./bench_mark_eval.txt",
         metadata={"help": "the location of the output file"},
     )
@@ -38,7 +41,7 @@ parser = HfArgumentParser(ScriptArguments)
 script_args = parser.parse_args_into_dataclasses()[0]
 
 ds_dir = script_args.dataset_name
-record_dir = script_args.record_dir
+output_path = script_args.output_path
 
 rm_name = script_args.reward_name_or_path
 rm_tokenizer = AutoTokenizer.from_pretrained(rm_name)
@@ -248,9 +251,9 @@ scores_per_section = calculate_scores_per_section(
 row = {"attribute": attribute, **scores_per_section}
 df_final = df_final._append(row, ignore_index=True)
 print("model:", script_args.reward_name_or_path)
-with open(record_dir, "a") as f:
+with open(output_path, "a") as f:
     f.write(script_args.reward_name_or_path + "\n")
     for col in ["Chat", "Chat Hard", "Safety", "Reasoning"]:
-        print(f"{col}: {df_final[col].values[0]}")
-
-        f.write(col + "\t" + str(df_final[col].values[0]) + "\n")
+        score = df_final[col].values[0]
+        print(f"{col}: {score}")
+        f.write(f"{col}: {score}\n")

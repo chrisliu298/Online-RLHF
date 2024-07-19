@@ -42,9 +42,9 @@ class ScriptArguments:
     weight_decay: Optional[float] = field(
         default=0.01, metadata={"help": "the weight decay"}
     )
-    optimizer_type: Optional[str] = field(
-        default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
-    )
+    # optimizer_type: Optional[str] = field(
+    #     default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
+    # )
 
     per_device_train_batch_size: Optional[int] = field(
         default=1, metadata={"help": "train batch size per device"}
@@ -64,7 +64,7 @@ class ScriptArguments:
         default=1024, metadata={"help": "the maximum prompt length"}
     )
     max_length: Optional[int] = field(
-        default=4096, metadata={"help": "the maximum sequence length"}
+        default=2048, metadata={"help": "the maximum sequence length"}
     )
     num_train_epochs: Optional[int] = field(
         default=1, metadata={"help": "max number of training epochs"}
@@ -86,9 +86,6 @@ class ScriptArguments:
     )
     output_dir: Optional[str] = field(
         default="/mnt/data2/yuhaoliu/trl_dpo", metadata={"help": "the output directory"}
-    )
-    log_freq: Optional[int] = field(
-        default=1, metadata={"help": "the logging frequency"}
     )
 
     # instrumentation
@@ -164,9 +161,8 @@ if __name__ == "__main__":
         gradient_checkpointing=script_args.gradient_checkpointing,
         learning_rate=script_args.learning_rate,
         output_dir=script_args.output_dir,
-        # report_to=script_args.report_to,
+        report_to=script_args.report_to,
         lr_scheduler_type=script_args.lr_scheduler_type,
-        # warmup_steps=script_args.warmup_steps,
         warmup_ratio=0.03,
         # optim=script_args.optimizer_type,
         bf16=True,

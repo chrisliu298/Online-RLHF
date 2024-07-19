@@ -169,6 +169,7 @@ if __name__ == "__main__":
         remove_unused_columns=False,
         run_name=script_args.run_name,
         dataset_num_proc=None,
+        ddp_timeout=3600,
     )
     print(training_args)
 

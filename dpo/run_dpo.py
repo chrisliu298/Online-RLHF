@@ -30,9 +30,13 @@ class ScriptArguments:
         default="",
         metadata={"help": "the location of the SFT model name or path"},
     )
-    train_dir: Optional[str] = field(
-        default="/mnt/data2/yuhaoliu/hf_datasets/UltraFeedback-preference-standard_processed",
+    train_data_path: Optional[str] = field(
+        default="/mnt/data2/yuhaoliu/dpo_datasets/helpsteer2_helpfulness_train_dpo",
         metadata={"help": "the location of the dataset name or path"},
+    )
+    eval_data_path: Optional[str] = field(
+        default="/mnt/data2/yuhaoliu/dpo_datasets/helpsteer2_helpfulness_validation_dpo",
+        metadata={"help": "the location of the eval dataset name or path"},
     )
     learning_rate: Optional[float] = field(
         default=5e-7, metadata={"help": "optimizer learning rate"}
@@ -53,11 +57,17 @@ class ScriptArguments:
     per_device_train_batch_size: Optional[int] = field(
         default=1, metadata={"help": "train batch size per device"}
     )
+    per_device_eval_batch_size: Optional[int] = field(
+        default=1, metadata={"help": "eval batch size per device"}
+    )
     gradient_accumulation_steps: Optional[int] = field(
         default=16, metadata={"help": "the number of gradient accumulation steps"}
     )
     gradient_checkpointing: Optional[bool] = field(
         default=True, metadata={"help": "whether to use gradient checkpointing"}
+    )
+    eval_steps: Optional[int] = field(
+        default=50, metadata={"help": "the evaluation frequency"}
     )
 
     eos_padding: Optional[bool] = field(
@@ -133,25 +143,26 @@ if __name__ == "__main__":
         use_flash_attention_2=True,
     )
     tokenizer = AutoTokenizer.from_pretrained(script_args.model_name_or_path)
-    if script_args.eos_padding:
-        tokenizer.pad_token = tokenizer.eos_token
-    else:
-        tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-        model.config.vocab_size += 1
-        model_ref.config.vocab_size += 1
-        model.config.pad_token_id = tokenizer.pad_token_id
-        model_ref.config.pad_token_id = tokenizer.pad_token_id
-        model.resize_token_embeddings(len(tokenizer))
-        model_ref.resize_token_embeddings(len(tokenizer))
+    if tokenizer.pad_token is None:
+        if script_args.eos_padding:
+            tokenizer.pad_token = tokenizer.eos_token
+        else:
+            tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+            model.config.vocab_size += 1
+            model_ref.config.vocab_size += 1
+            model.config.pad_token_id = tokenizer.pad_token_id
+            model_ref.config.pad_token_id = tokenizer.pad_token_id
+            model.resize_token_embeddings(len(tokenizer))
+            model_ref.resize_token_embeddings(len(tokenizer))
 
     # 2. Load the Stack-exchange paired dataset
-    train_dataset = load_from_disk(script_args.train_dir)
+    train_dataset = load_from_disk(script_args.train_data_path)
 
     if script_args.max_training_samples > 0:
         train_dataset = train_dataset.select(range(script_args.max_training_samples))
 
     # 3. Load evaluation dataset
-    # eval_dataset = None
+    eval_dataset = load_from_disk(script_args.eval_data_path)
 
     # 4. initialize training arguments:
 
@@ -174,6 +185,9 @@ if __name__ == "__main__":
         run_name=script_args.run_name,
         dataset_num_proc=None,
         ddp_timeout=3600,
+        eval_strategy="steps",
+        per_device_eval_batch_size=script_args.per_device_eval_batch_size,
+        eval_steps=script_args.eval_steps,
     )
     print(training_args)
 
@@ -184,7 +198,7 @@ if __name__ == "__main__":
         args=training_args,
         beta=script_args.beta,
         train_dataset=train_dataset,
-        # eval_dataset=eval_dataset,
+        eval_dataset=eval_dataset,
         tokenizer=tokenizer,
         loss_type=script_args.loss_type,
         max_prompt_length=script_args.max_prompt_length,

@@ -4,9 +4,10 @@ from typing import Optional
 
 import torch
 from datasets import load_from_disk
-from dpo import PreferenceTrainer
 from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 from trl import DPOConfig
+
+from dpo import PreferenceTrainer
 
 
 @dataclass
@@ -45,6 +46,9 @@ class ScriptArguments:
     # optimizer_type: Optional[str] = field(
     #     default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
     # )
+    warmup_ratio: Optional[float] = field(
+        default=0.03, metadata={"help": "the warmup ratio"}
+    )
 
     per_device_train_batch_size: Optional[int] = field(
         default=1, metadata={"help": "train batch size per device"}
@@ -163,7 +167,7 @@ if __name__ == "__main__":
         output_dir=script_args.output_dir,
         report_to=script_args.report_to,
         lr_scheduler_type=script_args.lr_scheduler_type,
-        warmup_ratio=0.03,
+        warmup_ratio=script_args.warmup_ratio,
         # optim=script_args.optimizer_type,
         bf16=True,
         remove_unused_columns=False,

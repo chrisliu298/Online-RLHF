@@ -89,7 +89,8 @@ class ScriptArguments:
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
-            self.output_dir = f"./bt_models/{self.model_name}_{self.train_set_path}_{self.num_train_epochs}_{self.learning_rate}_{self.lr_scheduler_type}"
+            train_set_path = self.train_set_path.split("/")[0]
+            self.output_dir = f"./bt_models/{self.model_name}_{train_set_path}_{self.num_train_epochs}_{self.learning_rate}_{self.lr_scheduler_type}"
 
 
 parser = HfArgumentParser(ScriptArguments)

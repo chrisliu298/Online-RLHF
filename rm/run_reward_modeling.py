@@ -67,6 +67,9 @@ class ScriptArguments:
     warmup_ratio: Optional[float] = field(
         default=0.03, metadata={"help": "The warmup ratio"}
     )
+    warmup_steps: Optional[int] = field(
+        default=0, metadata={"help": "The warmup steps"}
+    )
     max_length: Optional[int] = field(default=4096)
     save_every_steps: Optional[int] = field(
         default=999999, metadata={"help": "Save the model every x steps"}
@@ -131,6 +134,7 @@ training_args = TrainingArguments(
     optim=script_args.optim,
     lr_scheduler_type=script_args.lr_scheduler_type,
     warmup_ratio=script_args.warmup_ratio,
+    warmup_steps=script_args.warmup_steps,
     report_to="wandb",
     eval_strategy=script_args.eval_strategy,
     per_device_eval_batch_size=script_args.per_device_eval_batch_size,

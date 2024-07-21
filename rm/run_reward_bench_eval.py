@@ -256,7 +256,10 @@ print("model:", script_args.reward_name_or_path)
 with open(output_path, "a") as f:
     f.write(df_acc.to_string() + "\n")
     f.write(script_args.reward_name_or_path + "\n")
+    scores = []
     for col in ["Chat", "Chat Hard", "Safety", "Reasoning"]:
         score = df_final[col].values[0]
+        scores.append(score)
         print(f"{col}: {score}")
         f.write(f"{col}: {score}\n")
+    f.write(f"Avg: {sum(scores) / len(scores)}\n")

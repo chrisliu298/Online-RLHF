@@ -64,6 +64,9 @@ class ScriptArguments:
     lr_scheduler_type: Optional[str] = field(
         default="cosine", metadata={"help": "The lr scheduler"}
     )
+    warmup_ratio: Optional[float] = field(
+        default=0.03, metadata={"help": "The warmup ratio"}
+    )
     max_length: Optional[int] = field(default=4096)
     save_every_steps: Optional[int] = field(
         default=999999, metadata={"help": "Save the model every x steps"}
@@ -127,7 +130,7 @@ training_args = TrainingArguments(
     logging_steps=10,
     optim=script_args.optim,
     lr_scheduler_type=script_args.lr_scheduler_type,
-    warmup_ratio=0.03,
+    warmup_ratio=script_args.warmup_ratio,
     report_to="wandb",
     eval_strategy=script_args.eval_strategy,
     per_device_eval_batch_size=script_args.per_device_eval_batch_size,

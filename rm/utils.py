@@ -65,7 +65,7 @@ def build_dataset_local(tokenizer, train_path):
         sample["attention_mask_k"] = tokenized_neg["attention_mask"]
         return sample
 
-    dataset = load_from_disk(train_path)["train"].shuffle(seed=42)
+    dataset = load_from_disk(train_path).shuffle(seed=42)
     dataset = dataset.map(tokenize, num_proc=os.cpu_count())
     return dataset
 

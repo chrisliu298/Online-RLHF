@@ -86,6 +86,9 @@ class ScriptArguments:
     run_name: Optional[str] = field(
         default="reward_modeling", metadata={"help": "The name of the run"}
     )
+    logging_steps: Optional[int] = field(
+        default=1, metadata={"help": "The logging steps"}
+    )
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
@@ -134,7 +137,7 @@ training_args = TrainingArguments(
     label_names=[],
     bf16=script_args.bf16,
     logging_strategy="steps",
-    logging_steps=10,
+    logging_steps=script_args.logging_steps,
     optim=script_args.optim,
     lr_scheduler_type=script_args.lr_scheduler_type,
     warmup_ratio=script_args.warmup_ratio,
@@ -161,6 +164,7 @@ trainer = RewardTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
+    eval_dataset=eval_dataset,
     compute_metrics=compute_metrics,
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length

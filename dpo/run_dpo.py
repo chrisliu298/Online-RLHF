@@ -66,6 +66,9 @@ class ScriptArguments:
     gradient_checkpointing: Optional[bool] = field(
         default=True, metadata={"help": "whether to use gradient checkpointing"}
     )
+    eval_strategy: Optional[str] = field(
+        default="steps", metadata={"help": "the evaluation strategy"}
+    )
     eval_steps: Optional[int] = field(
         default=50, metadata={"help": "the evaluation frequency"}
     )
@@ -127,8 +130,8 @@ if __name__ == "__main__":
     # 1. load a pretrained model
     model = AutoModelForCausalLM.from_pretrained(
         script_args.model_name_or_path,
-        use_flash_attention_2=True,
         torch_dtype=torch.float16,
+        attn_implementation="flash_attention_2",
     )
     model.config.use_cache = False
 
@@ -185,7 +188,7 @@ if __name__ == "__main__":
         run_name=script_args.run_name,
         dataset_num_proc=None,
         ddp_timeout=3600,
-        eval_strategy="steps",
+        eval_strategy=script_args.eval_strategy,
         per_device_eval_batch_size=script_args.per_device_eval_batch_size,
         eval_steps=script_args.eval_steps,
     )

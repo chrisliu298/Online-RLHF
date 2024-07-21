@@ -24,6 +24,7 @@ class ScriptArguments:
     """
 
     per_device_train_batch_size: Optional[int] = field(default=1)
+    per_device_eval_batch_size: Optional[int] = field(default=1)
     gradient_accumulation_steps: Optional[int] = field(default=64)
     learning_rate: Optional[float] = field(default=1e-5)
     weight_decay: Optional[float] = field(default=0.001)
@@ -47,6 +48,10 @@ class ScriptArguments:
         default="preference_dataset_mixture2_and_safe_pku",
         metadata={"help": "The dir of the subset of the training data to use"},
     )
+    eval_set_path: Optional[str] = field(
+        default="preference_dataset_mixture2_and_safe_pku",
+        metadata={"help": "The dir of the subset of the evaluation data to use"},
+    )
     output_dir: Optional[str] = field(
         default="./bt_models", metadata={"help": "The dir for output model"}
     )
@@ -66,6 +71,12 @@ class ScriptArguments:
     load_data_from_local: Optional[bool] = field(
         default=False, metadata={"help": "Load the data from local disk"}
     )
+    eval_strategy: Optional[str] = field(
+        default="steps", metadata={"help": "The evaluation strategy"}
+    )
+    eval_steps: Optional[int] = field(
+        default=500, metadata={"help": "The evaluation steps"}
+    )
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
@@ -78,24 +89,25 @@ script_args = parser.parse_args_into_dataclasses()[0]
 # Load the value-head model and tokenizer.
 tokenizer_name = script_args.model_name
 tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=False)
-if script_args.model_name not in {
-    "gemma-2b-it",
-    "gemma-2-9b-it",
-    "gemma-2-27b-it",
-    "Qwen2-7B-Instruct",
-}:
+
+has_no_pad_token = tokenizer.pad_token is None
+if has_no_pad_token:
     tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 tokenizer.truncation_side = "left"
 tokenizer.model_max_length = script_args.max_length
 
 # Get the dataset
 train_path = script_args.train_set_path
+eval_path = script_args.eval_set_path
 output_name = script_args.output_dir
 if script_args.load_data_from_local:
     train_dataset = build_dataset_local(tokenizer, train_path)
+    eval_dataset = build_dataset_local(tokenizer, eval_path)
 else:
     train_dataset = build_dataset(tokenizer, train_path)
+    eval_dataset = build_dataset(tokenizer, eval_path)
 print("Training set:", len(train_dataset))
+print("Evaluation set:", len(eval_dataset))
 
 # Define the trainer
 training_args = TrainingArguments(
@@ -117,6 +129,9 @@ training_args = TrainingArguments(
     lr_scheduler_type=script_args.lr_scheduler_type,
     warmup_ratio=0.03,
     report_to="wandb",
+    eval_strategy=script_args.eval_strategy,
+    per_device_eval_batch_size=script_args.per_device_eval_batch_size,
+    eval_steps=script_args.eval_steps,
 )
 
 model = AutoModelForSequenceClassification.from_pretrained(
@@ -126,7 +141,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
     attn_implementation="flash_attention_2",
 )
 model.config.use_cache = not script_args.gradient_checkpointing
-if script_args.model_name != "gemma-2b-it":
+if has_no_pad_token:
     model.config.pad_token_id = tokenizer.pad_token_id
     model.resize_token_embeddings(len(tokenizer))
 

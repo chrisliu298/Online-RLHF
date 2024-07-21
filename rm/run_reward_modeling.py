@@ -65,7 +65,7 @@ class ScriptArguments:
         default="cosine", metadata={"help": "The lr scheduler"}
     )
     warmup_ratio: Optional[float] = field(
-        default=0.03, metadata={"help": "The warmup ratio"}
+        default=0.0, metadata={"help": "The warmup ratio"}
     )
     warmup_steps: Optional[int] = field(
         default=0, metadata={"help": "The warmup steps"}
@@ -83,10 +83,13 @@ class ScriptArguments:
     eval_steps: Optional[int] = field(
         default=500, metadata={"help": "The evaluation steps"}
     )
+    run_name: Optional[str] = field(
+        default="reward_modeling", metadata={"help": "The name of the run"}
+    )
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
-            self.output_dir = f"./bt_models/{self.model_name}_{self.train_set_path}"
+            self.output_dir = f"./bt_models/{self.model_name}_{self.train_set_path}_{self.num_train_epochs}_{self.learning_rate}_{self.lr_scheduler_type}"
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -139,6 +142,7 @@ training_args = TrainingArguments(
     eval_strategy=script_args.eval_strategy,
     per_device_eval_batch_size=script_args.per_device_eval_batch_size,
     eval_steps=script_args.eval_steps,
+    run_name=script_args.run_name,
 )
 
 model = AutoModelForSequenceClassification.from_pretrained(

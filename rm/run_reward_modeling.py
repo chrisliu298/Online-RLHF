@@ -103,9 +103,9 @@ script_args = parser.parse_args_into_dataclasses()[0]
 tokenizer_name = script_args.model_name
 tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=False)
 
-has_no_pad_token = tokenizer.pad_token is None
-if has_no_pad_token:
-    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+# has_no_pad_token = tokenizer.pad_token is None
+# if has_no_pad_token:
+tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 tokenizer.truncation_side = "left"
 tokenizer.model_max_length = script_args.max_length
 
@@ -156,9 +156,9 @@ model = AutoModelForSequenceClassification.from_pretrained(
     attn_implementation="flash_attention_2",
 )
 model.config.use_cache = not script_args.gradient_checkpointing
-if has_no_pad_token:
-    model.config.pad_token_id = tokenizer.pad_token_id
-    model.resize_token_embeddings(len(tokenizer))
+# if has_no_pad_token:
+model.config.pad_token_id = tokenizer.pad_token_id
+model.resize_token_embeddings(len(tokenizer))
 
 trainer = RewardTrainer(
     model=model,

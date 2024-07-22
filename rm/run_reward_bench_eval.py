@@ -262,4 +262,5 @@ with open(output_path, "a") as f:
         scores.append(score)
         print(f"{col}: {score}")
         f.write(f"{col}: {score}\n")
+    print(f"Avg: {sum(scores) / len(scores)}")
     f.write(f"Avg: {sum(scores) / len(scores)}\n")

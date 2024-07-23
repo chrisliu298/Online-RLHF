@@ -92,7 +92,10 @@ class ScriptArguments:
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
-            train_set_path = self.train_set_path.split("/")[0]
+            if "/" in self.train_set_path:
+                train_set_path = self.train_set_path.split("/")[0]
+            else:
+                train_set_path = self.train_set_path
             self.output_dir = f"./bt_models/{self.model_name}_{train_set_path}_{self.num_train_epochs}_{self.learning_rate}_{self.lr_scheduler_type}"
 
 

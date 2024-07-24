@@ -1,24 +1,27 @@
 # Online RLHF
 
+> [!NOTE]  
+> This is a fork of the amazing [Online-RLHF](https://github.com/RLHFlow/Online-RLHF) project by [RLHFlow](https://github.com/RLHFlow). This fork includes additional implementations, such as PPO and (initial) offline DPO. It also merges [RLHF-Reward-Modeling](https://github.com/RLHFlow/RLHF-Reward-Modeling) (also by RLHFlow) into this particular repository.
+
 TL;DL: this is a repo to align the large language models (LLMs) by [online iterative RLHF](https://arxiv.org/pdf/2312.11456.pdf). Also check out our [technical report](https://arxiv.org/pdf/2405.07863) and [Huggingface Repo](https://huggingface.co/RLHFlow)!
 
-We present the workflow of Online Iterative Reinforcement Learning from Human Feedback (RLHF), which is widely reported to outperform its offline counterpart by a large margin in the recent LLM literature. However, existing open-source RLHF projects are still largely confined to the offline learning setting. In this repo, we aim to fill in this gap and provide a detailed recipe that is easy to be reproduced for online iterative RLHF. In particular, with our recipe, with **only open-source data**, we can achieve comparable or even better results than LLaMA3-8B-instruct. 
+We present the workflow of Online Iterative Reinforcement Learning from Human Feedback (RLHF), which is widely reported to outperform its offline counterpart by a large margin in the recent LLM literature. However, existing open-source RLHF projects are still largely confined to the offline learning setting. In this repo, we aim to fill in this gap and provide a detailed recipe that is easy to be reproduced for online iterative RLHF. In particular, with our recipe, with **only open-source data**, we can achieve comparable or even better results than LLaMA3-8B-instruct.
 
 <img width="1589" alt="image" src="eval_result.png">
 
 ## Model Releases
+
 - [SFT model](https://huggingface.co/RLHFlow/LLaMA3-SFT)
 - [Reward model](https://huggingface.co/sfairXC/FsfairX-LLaMA3-RM-v0.1)
 - [RLHF model](https://huggingface.co/RLHFlow/LLaMA3-iterative-DPO-final)
 
-## Installation instructions
+### Installation instructions
 
-It is recommeded to have two separate environments for **inference** and **training**, respectively. 
+It is recommeded to have two separate environments for **inference** and **training**, respectively.
 
 **Note that the numpy version should be `numpy<2.0`.  `Numpy 2.0` will encounter unexpected issues!!!**
 
-
-**Inference Environment**
+### Inference Environment
 
 ```sh
 conda create -n vllm python=3.10.9
@@ -33,7 +36,7 @@ pip install accelerate==0.27.2
 pip install deepspeed
 ```
 
-**Training Environment**
+### Training Environment
 
 ```sh
 conda create -n rlhflow python=3.10.9
@@ -58,9 +61,11 @@ huggingface-cli login
 ```
 
 ## Get Started
-We present a step-by-step guidance in this section. 
+
+We present a step-by-step guidance in this section.
 
 ### Step 1 Supervised Fine-tuning
+
 To start with, you should first preprocess your dataset into the standard format. Here is an [example](https://huggingface.co/datasets/RLHFlow/SFT-OpenHermes-2.5-Standard) of the dataset. You may need to adjust the hyper-parameters (batch size, packing size) according to your computational resources. To run SFT, you can use the following command.
 
 ```sh
@@ -73,11 +78,13 @@ accelerate launch --config_file ./configs/zero3.yaml ./sft/sft.py
 ```
 
 ### Step 2 Reward Modeling
+
 We refer the interested readers to [this repo](https://github.com/RLHFlow/RLHF-Reward-Modeling) for a detailed recipe to train the state-of-the-art open-source reward/preference models. We have trained several RMs and prepared them on the huggingface like [sfairXC/FsfairX-LLaMA3-RM-v0.1](https://huggingface.co/sfairXC/FsfairX-LLaMA3-RM-v0.1) and [RLHFlow/pair-preference-model-LLaMA3-8B](https://huggingface.co/RLHFlow/pair-preference-model-LLaMA3-8B), which are SOTA open-source RMs so far (2024 May).
 
 <img width="1589" alt="image" src="https://github.com/RLHFlow/Iterative-RLHF-dev/assets/90632760/956449aa-f382-496a-8691-12c10bd24ea2">
 
 ### Step 3.1 Data Generation
+
 To accelerate data generation, we use the VLLM. We prepare two ways of using VLLM to inference for a more robust implementation, where you can try them out and choose the one that fits with your environment best. We use LLaMA3-8B as an example. For other models, you need to adjust the eos_ids.
 
 You may create a test_gen.sh file, and copy the following contents into the file and run ``bash test_gen.sh''.
@@ -121,14 +128,16 @@ python ./generation/gen_hf.py --ports 8000 8001 8002 8003 8004 8005 8006 8007 --
 ```
 
 ### Step 3.2 Data Annotation
-Then, we call the reward/preference model trained in step 2 to rank the generated responses. 
+
+Then, we call the reward/preference model trained in step 2 to rank the generated responses.
 
 ```sh
 accelerate launch ./annotate_data/get_rewards.py --dataset_name_or_path ./data/gen_data.json --output_dir ./data/data_with_rewards.json --K 4
 ```
+
 If you encounter error ``TypeError: Got unsupported ScalarType BFloat16'', considering pip install transformers==4.38.2
 
-**Remark**: following LLaMA2 project, the current implementation assumes that the RM shares the same chat template with the model to be aligned. In many cases, however, the RM may have its own chat template. You can update the change_of_format function in get_rewards.py and enable 
+**Remark**: following LLaMA2 project, the current implementation assumes that the RM shares the same chat template with the model to be aligned. In many cases, however, the RM may have its own chat template. You can update the change_of_format function in get_rewards.py and enable
 
 ```python
 # Around line 123
@@ -144,9 +153,11 @@ initial_model=meta-llama/Meta-Llama-3-8B-Instruct
 mkdir models
 accelerate launch --config_file ./configs/zero2.yaml ./dpo_iteration/run_dpo.py --run_name rlhflow_iter1 --output_dir ./models/rlhflow_iter1 --model_name_or_path $model_path --ref_model $initial_model --learning_rate 2e-7 --max_steps 1200 --choose_type max_min --train_dir ./data/data_with_rewards.json --eval_dir ./data/data_with_rewards.json --loss_type sigmoid --lr_scheduler_type cosine
 ```
+
 If you encounter ``RuntimeError: CUDA error: invalid device ordinal, CUDA kernel errors might be asynchronously reported at some other API call'', you need to adjust num_of_process in the config file according to your GPUs.
 
 ### Putting Everything Together
+
 We put everything together so that the iterative training can run automatically. Note that we set sleep 1m to wait for registering the API for inference. You may need to adjust this parameter according to your environment.
 
 ```sh
@@ -155,7 +166,7 @@ bash run_loop.sh
 
 ## Acknowledgement
 
-The authors would like to thank the great open-source communities, including the Huggingface TRL team, the Huggingface H4 team, the Allen Institute AI RewardBench team, the Meta LLaMA team, and Axolotl team for sharing the models, codes, and training sets. 
+The authors would like to thank the great open-source communities, including the Huggingface TRL team, the Huggingface H4 team, the Allen Institute AI RewardBench team, the Meta LLaMA team, and Axolotl team for sharing the models, codes, and training sets.
 
 ## Citation
 

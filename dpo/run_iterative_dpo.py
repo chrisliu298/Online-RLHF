@@ -240,7 +240,7 @@ if __name__ == "__main__":
         torch_dtype=torch.float16,
         attn_implementation="flash_attention_2",
     )
-    model.config.use_cache = Falses
+    model.config.use_cache = False
 
     if script_args.ref_model:
         ref_name = script_args.ref_model

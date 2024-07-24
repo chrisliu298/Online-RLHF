@@ -247,8 +247,8 @@ if __name__ == "__main__":
     # 1. load a pretrained model
     model = AutoModelForCausalLM.from_pretrained(
         script_args.model_name_or_path,
-        use_flash_attention_2=True,
         torch_dtype=torch.float16,
+        attn_implementation="flash_attention_2",
     )
     model.config.use_cache = False
 
@@ -266,7 +266,7 @@ if __name__ == "__main__":
     model_ref = AutoModelForCausalLM.from_pretrained(
         ref_name,
         torch_dtype=torch.bfloat16,
-        use_flash_attention_2=True,
+        attn_implementation="flash_attention_2",
     )
     tokenizer = AutoTokenizer.from_pretrained(script_args.model_name_or_path)
     if tokenizer.pad_token is None:

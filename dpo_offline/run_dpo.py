@@ -148,7 +148,7 @@ if __name__ == "__main__":
     model_ref = AutoModelForCausalLM.from_pretrained(
         ref_name,
         torch_dtype=torch.bfloat16,
-        use_flash_attention_2=True,
+        attn_implementation="flash_attention_2",
     )
     tokenizer = AutoTokenizer.from_pretrained(script_args.model_name_or_path)
     if tokenizer.pad_token is None:

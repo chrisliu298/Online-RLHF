@@ -10,7 +10,8 @@ class CustomWandbCallback(WandbCallback):
     def setup(self, args, state, model, **kwargs):
         super().setup(args, state, model, **kwargs)
         if dist.get_rank() == 0:
-            self._wandb.log(self.kwargs)
+            # self._wandb.log(self.kwargs)
+            self._wandb.config.update(self.kwargs)
 
     # def on_train_begin(self, args, state, control, model=None, **kwargs):
     #     super().on_train_begin(args, state, control, model, **kwargs)

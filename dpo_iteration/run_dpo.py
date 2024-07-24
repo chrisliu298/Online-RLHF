@@ -278,16 +278,17 @@ if __name__ == "__main__":
         use_flash_attention_2=True,
     )
     tokenizer = AutoTokenizer.from_pretrained(script_args.model_name_or_path)
-    if script_args.eos_padding:
-        tokenizer.pad_token = tokenizer.eos_token
-    else:
-        tokenizer.add_special_tokens({"pad_token": "[PAD]"})
-        model.config.vocab_size += 1
-        model_ref.config.vocab_size += 1
-        model.config.pad_token_id = tokenizer.pad_token_id
-        model_ref.config.pad_token_id = tokenizer.pad_token_id
-        model.resize_token_embeddings(len(tokenizer))
-        model_ref.resize_token_embeddings(len(tokenizer))
+    if tokenizer.pad_token is None:
+        if script_args.eos_padding:
+            tokenizer.pad_token = tokenizer.eos_token
+        else:
+            tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+            model.config.vocab_size += 1
+            model_ref.config.vocab_size += 1
+            model.config.pad_token_id = tokenizer.pad_token_id
+            model_ref.config.pad_token_id = tokenizer.pad_token_id
+            model.resize_token_embeddings(len(tokenizer))
+            model_ref.resize_token_embeddings(len(tokenizer))
 
     def tokenize(sample):
         tokenized_pos = tokenizer(

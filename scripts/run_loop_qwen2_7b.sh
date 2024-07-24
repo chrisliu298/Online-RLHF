@@ -1,6 +1,6 @@
 # Base paths and settings
 initial_model="Qwen2-7B-Instruct"
-reward_model="/mnt/data/yuhaoliu/models/bt_models/Qwen2-7B-Instruct_preference_700K"
+reward_model="Qwen2-7B-Instruct_preference_700K"
 base_path="/mnt/data/yuhaoliu/experiments/dpo"
 mkdir $base_path
 

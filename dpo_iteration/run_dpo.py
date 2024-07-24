@@ -146,11 +146,8 @@ class ScriptArguments:
     len_penalty: Optional[float] = field(
         default=0, metadata={"help": "the length penalty"}
     )
-    nll_loss: Optional[bool] = field(
-        default=False, metadata={"help": "whether to use nll loss"}
-    )
     nll_loss_coef: Optional[float] = field(
-        default=0.2, metadata={"help": "the nll loss coefficient"}
+        default=0.0, metadata={"help": "the nll loss coefficient"}
     )
 
 
@@ -355,7 +352,6 @@ if __name__ == "__main__":
         max_length=script_args.max_length,
         mask_prompt=script_args.mask_prompt,
         len_penalty=script_args.len_penalty,
-        nll_loss=script_args.nll_loss,
         nll_loss_coef=script_args.nll_loss_coef,
     )
     print("begin to train")

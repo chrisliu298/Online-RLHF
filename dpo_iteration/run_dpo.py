@@ -99,7 +99,7 @@ class ScriptArguments:
         default="steps", metadata={"help": "the saving strategy"}
     )
     save_steps: Optional[int] = field(
-        default=50000, metadata={"help": "the saving frequency"}
+        default=1e8, metadata={"help": "the saving frequency"}
     )
     run_name: Optional[str] = field(
         default="dpo_soft", metadata={"help": "the run name"}

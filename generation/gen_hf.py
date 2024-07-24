@@ -1,11 +1,12 @@
 import json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from typing import List, Optional
-from datasets import load_dataset
+
+import requests
+from datasets import load_dataset, load_from_disk
 from tqdm import tqdm
 from transformers import AutoTokenizer, HfArgumentParser
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import requests
 
 tqdm.pandas()
 
@@ -24,8 +25,14 @@ class ScriptArguments:
         default="HuggingFaceH4/mistral-7b-sft-beta",
         metadata={"help": "the tokenizer to use"},
     )
-    ports: List[str] = field(default_factory=lambda: ["8000"], metadata={"help": "ports of the model response"})
-    eos_ids: List[int] = field(default_factory=lambda: [], metadata={"help": "the ids of the end of sentence tokens"})
+    ports: List[str] = field(
+        default_factory=lambda: ["8000"],
+        metadata={"help": "ports of the model response"},
+    )
+    eos_ids: List[int] = field(
+        default_factory=lambda: [],
+        metadata={"help": "the ids of the end of sentence tokens"},
+    )
     dataset_name_or_path: Optional[str] = field(
         default="cornfieldrm/iterative-prompt-v1-iter1-2K",
         metadata={"help": "the location of the dataset name or path"},
@@ -87,9 +94,14 @@ def query_model(prompt, args, port):
         **args,
         "prompt": prompt,
     }
-    response = requests.post(url=script_args.url + ":" + str(port) + "/generate", json=json)
+    response = requests.post(
+        url=script_args.url + ":" + str(port) + "/generate", json=json
+    )
     response_json = response.json()
-    return [response_json["text"][i][len(prompt) :] for i in range(len(response_json["text"]))]
+    return [
+        response_json["text"][i][len(prompt) :]
+        for i in range(len(response_json["text"]))
+    ]
 
 
 default_args = {
@@ -105,21 +117,27 @@ default_args = {
 
 print(default_args)
 
-ds = load_dataset(ds_dir, split="train")
+# ds = load_dataset(ds_dir, split="train")
 # load_dataset("json", data_files=ds_dir, split="train", field="instances")
+ds = load_from_disk(ds_dir)["train"]
 print(ds)
 
 # use tokenizer.apply_template to apply the template to the prompt
 ds = ds.map(
     lambda x: {
-        "prompt": tokenizer.apply_chat_template(x[script_args.dataset_key], tokenize=False, add_generation_prompt=True)
+        "prompt": tokenizer.apply_chat_template(
+            x[script_args.dataset_key], tokenize=False, add_generation_prompt=True
+        )
     }
 )
 
 
 with ThreadPoolExecutor(max_workers=script_args.max_workers) as executor:
     result = [
-        executor.submit(query_model, ds[i]["prompt"], default_args, ports[i % len(ports)]) for i in range(len(ds))
+        executor.submit(
+            query_model, ds[i]["prompt"], default_args, ports[i % len(ports)]
+        )
+        for i in range(len(ds))
     ]
     # use tqdm to show progress
     for _ in tqdm(as_completed(result), total=len(result)):

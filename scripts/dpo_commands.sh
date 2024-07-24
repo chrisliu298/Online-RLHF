@@ -1,0 +1,2 @@
+cp -r /mnt/data/yuhaoliu/models/bt_models/Qwen2-7B-Instruct_preference_700K /mnt/data/yuhaoliu/models/hf_models/Qwen2-7B-Instruct .
+cp -r /mnt/data/yuhaoliu/datasets/dpo_datasets/alignbench_dpo_prompts .

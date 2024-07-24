@@ -9,6 +9,8 @@ from dpo import PreferenceTrainer
 from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 from trl import DPOConfig
 
+from callback.wandb_callback import CustomWandbCallback
+
 
 @dataclass
 class ScriptArguments:
@@ -314,7 +316,6 @@ if __name__ == "__main__":
     )
 
     # 4. initialize training arguments:
-
     training_args = DPOConfig(
         per_device_train_batch_size=script_args.per_device_train_batch_size,
         per_device_eval_batch_size=script_args.per_device_eval_batch_size,
@@ -334,6 +335,9 @@ if __name__ == "__main__":
         bf16=True,
         remove_unused_columns=False,
         run_name=script_args.run_name,
+        callback=CustomWandbCallback(
+            nll_loss_coef=script_args.nll_loss_coef, choose_type=script_args.choose_type
+        ),
     )
     print(training_args)
 

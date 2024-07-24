@@ -330,6 +330,7 @@ class PreferenceTrainer(DPOTrainer):
         self.use_dpo_data_collator = True
         self.len_penalty = len_penalty
         self.nll_loss_coef = nll_loss_coef
+        self.log()
 
     def dpo_loss(
         self,

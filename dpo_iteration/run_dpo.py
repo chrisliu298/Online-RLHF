@@ -93,9 +93,6 @@ class ScriptArguments:
     max_length: Optional[int] = field(
         default=2048, metadata={"help": "the maximum sequence length"}
     )
-    max_steps: Optional[int] = field(
-        default=20, metadata={"help": "max number of training steps"}
-    )
     num_train_epochs: Optional[int] = field(
         default=2, metadata={"help": "max number of training epochs"}
     )
@@ -329,7 +326,6 @@ if __name__ == "__main__":
     training_args = TrainingArguments(
         per_device_train_batch_size=script_args.per_device_train_batch_size,
         per_device_eval_batch_size=script_args.per_device_eval_batch_size,
-        # max_steps=script_args.max_steps,
         num_train_epochs=script_args.num_train_epochs,
         save_strategy=script_args.save_strategy,
         logging_steps=script_args.logging_steps,
@@ -340,10 +336,10 @@ if __name__ == "__main__":
         evaluation_strategy="steps",
         eval_steps=script_args.eval_steps,
         output_dir=script_args.output_dir,
-        # report_to=script_args.report_to,
+        report_to=script_args.report_to,
         lr_scheduler_type=script_args.lr_scheduler_type,
         warmup_steps=script_args.warmup_steps,
-        # optim=script_args.optimizer_type,
+        optim=script_args.optimizer_type,
         bf16=True,
         remove_unused_columns=False,
         run_name=script_args.run_name,

@@ -4,8 +4,6 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 import torch
 import torch.nn.functional as F
 from datasets import Dataset
-
-# from peft import AutoPeftModelForCausalLM, LoraConfig
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from transformers import (
@@ -19,9 +17,8 @@ from transformers.trainer_callback import TrainerCallback
 from transformers.trainer_utils import EvalLoopOutput
 from trl import DPOTrainer
 
+
 # Define and parse arguments.
-
-
 @dataclass
 class PreferenceDataCollatorWithPadding:
     tokenizer: PreTrainedTokenizerBase
@@ -53,6 +50,11 @@ class PreferenceDataCollatorWithPadding:
             label_pad_token_id  for the prompt tokens.
         """
         batch = {}
+        # prompt = self.tokenizer.apply_chat_template(
+        #     [{"role": "user", "content": prompt}],
+        #     tokenize=False,
+        #     add_generation_prompt=False,
+        # )
 
         if not self.is_encoder_decoder:
             chosen_tokens = self.tokenizer(chosen, add_special_tokens=False)
@@ -241,7 +243,7 @@ class PreferenceDataCollatorWithPadding:
             rejected = feature["rejected"]
 
             batch_element = self.tokenize_batch_element(prompt, chosen, rejected)
-            batch_element["margin"] = feature["margin"]
+            # batch_element["margin"] = feature["margin"]
             tokenized_batch.append(batch_element)
 
         # return collated batch
@@ -433,6 +435,7 @@ class PreferenceTrainer(DPOTrainer):
             policy_rejected_logps,
             policy_chosen_logits,
             policy_rejected_logits,
+            policy_nll_loss,
         ) = self.concatenated_forward(model, batch)
         with torch.no_grad():
             if self.ref_model is None:
@@ -453,9 +456,7 @@ class PreferenceTrainer(DPOTrainer):
             rejected_len = 1
             len_penalty = 0
 
-        margin = torch.tensor(batch["margin"], dtype=policy_chosen_logps.dtype).to(
-            self.accelerator.device
-        )
+        margin = None
         losses, chosen_rewards, rejected_rewards = self.dpo_loss(
             policy_chosen_logps,
             policy_rejected_logps,

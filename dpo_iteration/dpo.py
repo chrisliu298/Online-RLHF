@@ -4,6 +4,7 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 import torch
 import torch.nn.functional as F
 from datasets import Dataset
+
 # from peft import AutoPeftModelForCausalLM, LoraConfig
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
@@ -19,10 +20,6 @@ from transformers.trainer_utils import EvalLoopOutput
 from trl import DPOTrainer
 
 # Define and parse arguments.
-
-
-
-
 
 
 @dataclass
@@ -64,26 +61,39 @@ class PreferenceDataCollatorWithPadding:
 
             eos_token_id = self.tokenizer.eos_token_id
             # Get indices in list prompt_tokens["input_ids"] that equals the EOS token (often 0)
-            eos_indices_prompt = [i for i, x in enumerate(prompt_tokens["input_ids"]) if x == eos_token_id]
+            eos_indices_prompt = [
+                i for i, x in enumerate(prompt_tokens["input_ids"]) if x == eos_token_id
+            ]
             # attention mask these indices to eos_token_id
             if self.mask_prompt:
-                new_attention_mask = [0 for i, p in enumerate(prompt_tokens["attention_mask"])]
+                new_attention_mask = [
+                    0 for i, p in enumerate(prompt_tokens["attention_mask"])
+                ]
             else:
                 new_attention_mask = [
-                    0 if i in eos_indices_prompt else p for i, p in enumerate(prompt_tokens["attention_mask"])
+                    0 if i in eos_indices_prompt else p
+                    for i, p in enumerate(prompt_tokens["attention_mask"])
                 ]
             prompt_tokens["attention_mask"] = new_attention_mask
 
             # do the same for chosen and rejected
-            eos_indices_chosen = [i for i, x in enumerate(chosen_tokens["input_ids"]) if x == eos_token_id]
+            eos_indices_chosen = [
+                i for i, x in enumerate(chosen_tokens["input_ids"]) if x == eos_token_id
+            ]
             new_attention_mask_c = [
-                0 if i in eos_indices_chosen else p for i, p in enumerate(chosen_tokens["attention_mask"])
+                0 if i in eos_indices_chosen else p
+                for i, p in enumerate(chosen_tokens["attention_mask"])
             ]
             chosen_tokens["attention_mask"] = new_attention_mask_c
 
-            eos_indices_rejected = [i for i, x in enumerate(rejected_tokens["input_ids"]) if x == eos_token_id]
+            eos_indices_rejected = [
+                i
+                for i, x in enumerate(rejected_tokens["input_ids"])
+                if x == eos_token_id
+            ]
             new_attention_mask_r = [
-                0 if i in eos_indices_rejected else p for i, p in enumerate(rejected_tokens["attention_mask"])
+                0 if i in eos_indices_rejected else p
+                for i, p in enumerate(rejected_tokens["attention_mask"])
             ]
             rejected_tokens["attention_mask"] = new_attention_mask_r
 
@@ -95,35 +105,58 @@ class PreferenceDataCollatorWithPadding:
             rejected_tokens["input_ids"].append(self.tokenizer.eos_token_id)
             rejected_tokens["attention_mask"].append(1)
 
-            longer_response_length = max(len(chosen_tokens["input_ids"]), len(rejected_tokens["input_ids"]))
+            longer_response_length = max(
+                len(chosen_tokens["input_ids"]), len(rejected_tokens["input_ids"])
+            )
 
             # if combined sequence is too long, truncate the prompt
-            if len(prompt_tokens["input_ids"]) + longer_response_length > self.max_length:
+            if (
+                len(prompt_tokens["input_ids"]) + longer_response_length
+                > self.max_length
+            ):
                 if self.truncation_mode == "keep_start":
-                    prompt_tokens = {k: v[: self.max_prompt_length] for k, v in prompt_tokens.items()}
+                    prompt_tokens = {
+                        k: v[: self.max_prompt_length] for k, v in prompt_tokens.items()
+                    }
                 elif self.truncation_mode == "keep_end":
-                    prompt_tokens = {k: v[-self.max_prompt_length :] for k, v in prompt_tokens.items()}
+                    prompt_tokens = {
+                        k: v[-self.max_prompt_length :]
+                        for k, v in prompt_tokens.items()
+                    }
                 else:
                     raise ValueError(f"Unknown truncation mode: {self.truncation_mode}")
 
             # if that's still too long, truncate the response
-            if len(prompt_tokens["input_ids"]) + longer_response_length > self.max_length:
-                chosen_tokens = {k: v[: self.max_length - self.max_prompt_length] for k, v in chosen_tokens.items()}
+            if (
+                len(prompt_tokens["input_ids"]) + longer_response_length
+                > self.max_length
+            ):
+                chosen_tokens = {
+                    k: v[: self.max_length - self.max_prompt_length]
+                    for k, v in chosen_tokens.items()
+                }
                 rejected_tokens = {
-                    k: v[: self.max_length - self.max_prompt_length] for k, v in rejected_tokens.items()
+                    k: v[: self.max_length - self.max_prompt_length]
+                    for k, v in rejected_tokens.items()
                 }
 
             # Create labels
-            chosen_sequence_tokens = {k: prompt_tokens[k] + chosen_tokens[k] for k in chosen_tokens}
-            rejected_sequence_tokens = {k: prompt_tokens[k] + rejected_tokens[k] for k in rejected_tokens}
+            chosen_sequence_tokens = {
+                k: prompt_tokens[k] + chosen_tokens[k] for k in chosen_tokens
+            }
+            rejected_sequence_tokens = {
+                k: prompt_tokens[k] + rejected_tokens[k] for k in rejected_tokens
+            }
             chosen_sequence_tokens["labels"] = chosen_sequence_tokens["input_ids"][:]
-            chosen_sequence_tokens["labels"][: len(prompt_tokens["input_ids"])] = [self.label_pad_token_id] * len(
-                prompt_tokens["input_ids"]
-            )
-            rejected_sequence_tokens["labels"] = rejected_sequence_tokens["input_ids"][:]
-            rejected_sequence_tokens["labels"][: len(prompt_tokens["input_ids"])] = [self.label_pad_token_id] * len(
-                prompt_tokens["input_ids"]
-            )
+            chosen_sequence_tokens["labels"][: len(prompt_tokens["input_ids"])] = [
+                self.label_pad_token_id
+            ] * len(prompt_tokens["input_ids"])
+            rejected_sequence_tokens["labels"] = rejected_sequence_tokens["input_ids"][
+                :
+            ]
+            rejected_sequence_tokens["labels"][: len(prompt_tokens["input_ids"])] = [
+                self.label_pad_token_id
+            ] * len(prompt_tokens["input_ids"])
 
             for k, toks in {
                 "chosen": chosen_sequence_tokens,
@@ -150,7 +183,11 @@ class PreferenceDataCollatorWithPadding:
         # first, pad everything to the same length
         padded_batch = {}
         for k in batch[0].keys():
-            if k.endswith("_input_ids") or k.endswith("_attention_mask") or k.endswith("_labels"):
+            if (
+                k.endswith("_input_ids")
+                or k.endswith("_attention_mask")
+                or k.endswith("_labels")
+            ):
                 if self.is_encoder_decoder:
                     to_pad = [torch.LongTensor(ex[k]) for ex in batch]
 
@@ -158,11 +195,17 @@ class PreferenceDataCollatorWithPadding:
                         padding_value = self.tokenizer.pad_token_id
                     elif k.endswith("_attention_mask"):
                         padding_value = 0
-                    elif (k.startswith("chosen")) or (k.startswith("rejected")) or ("decoder" in k):
+                    elif (
+                        (k.startswith("chosen"))
+                        or (k.startswith("rejected"))
+                        or ("decoder" in k)
+                    ):
                         padding_value = self.label_pad_token_id
                     else:
                         raise ValueError(f"Unexpected key in batch '{k}'")
-                    padded_batch[k] = pad_sequence(to_pad, batch_first=True, padding_value=padding_value)
+                    padded_batch[k] = pad_sequence(
+                        to_pad, batch_first=True, padding_value=padding_value
+                    )
                 else:
                     # adapted from https://stackoverflow.com/questions/73256206
                     if "prompt" in k:
@@ -178,7 +221,9 @@ class PreferenceDataCollatorWithPadding:
                     else:
                         raise ValueError(f"Unexpected key in batch '{k}'")
 
-                    padded_batch[k] = pad_sequence(to_pad, batch_first=True, padding_value=padding_value)
+                    padded_batch[k] = pad_sequence(
+                        to_pad, batch_first=True, padding_value=padding_value
+                    )
                     # for the prompt, flip back so padding is on left side
                     if "prompt" in k:
                         padded_batch[k] = padded_batch[k].flip(dims=[1])
@@ -209,7 +254,9 @@ class PreferenceTrainer(DPOTrainer):
         model: Union[PreTrainedModel, nn.Module] = None,
         ref_model: Optional[Union[PreTrainedModel, nn.Module]] = None,
         beta: float = 0.1,
-        loss_type: Literal["sigmoid", "hinge", "cross_entropy", "kl", "rev_kl", "raft"] = "rev_kl",
+        loss_type: Literal[
+            "sigmoid", "hinge", "cross_entropy", "kl", "rev_kl", "raft"
+        ] = "rev_kl",
         args: TrainingArguments = None,
         data_collator: Optional[DataCollator] = None,
         label_pad_token_id: int = -100,
@@ -224,7 +271,9 @@ class PreferenceTrainer(DPOTrainer):
             None,
             None,
         ),
-        preprocess_logits_for_metrics: Optional[Callable[[torch.Tensor, torch.Tensor], torch.Tensor]] = None,
+        preprocess_logits_for_metrics: Optional[
+            Callable[[torch.Tensor, torch.Tensor], torch.Tensor]
+        ] = None,
         max_length: Optional[int] = None,
         max_prompt_length: Optional[int] = None,
         max_target_length: Optional[int] = None,
@@ -329,7 +378,9 @@ class PreferenceTrainer(DPOTrainer):
             p = F.sigmoid(self.beta * logits)
             p = torch.minimum(p, torch.ones_like(p) * 0.999)
             p_gt = torch.exp(margin) / (1 + torch.exp(margin) + 1e-3)
-            losses = p * (torch.log(p) - torch.log(p_gt)) + (1 - p) * (torch.log(1 - p) - torch.log(1 - p_gt))
+            losses = p * (torch.log(p) - torch.log(p_gt)) + (1 - p) * (
+                torch.log(1 - p) - torch.log(1 - p_gt)
+            )
         elif self.loss_type == "tv":
             logits = pi_logratios - ref_logratios
             p = F.sigmoid(self.beta * logits)
@@ -340,7 +391,9 @@ class PreferenceTrainer(DPOTrainer):
             p = F.sigmoid(self.beta * logits)
             p = torch.minimum(p, torch.ones_like(p) * 0.999)
             p_gt = torch.exp(margin) / (1 + torch.exp(margin))
-            losses = 0.5 * ((p**0.5 - p_gt**0.5) ** 2 + ((1 - p) ** 0.5 - (1 - p_gt) ** 0.5) ** 2)
+            losses = 0.5 * (
+                (p**0.5 - p_gt**0.5) ** 2 + ((1 - p) ** 0.5 - (1 - p_gt) ** 0.5) ** 2
+            )
         elif self.loss_type == "rev_kl":
             logits = pi_logratios - ref_logratios
             logp = F.logsigmoid(self.beta * logits)
@@ -350,8 +403,12 @@ class PreferenceTrainer(DPOTrainer):
         else:
             raise ValueError(f"Unknown loss type: {self.loss_type}.")
 
-        chosen_rewards = self.beta * (policy_chosen_logps - reference_chosen_logps).detach()
-        rejected_rewards = self.beta * (policy_rejected_logps - reference_rejected_logps).detach()
+        chosen_rewards = (
+            self.beta * (policy_chosen_logps - reference_chosen_logps).detach()
+        )
+        rejected_rewards = (
+            self.beta * (policy_rejected_logps - reference_rejected_logps).detach()
+        )
 
         return losses, chosen_rewards, rejected_rewards
 
@@ -402,7 +459,9 @@ class PreferenceTrainer(DPOTrainer):
             rejected_len = 1
             len_penalty = 0
 
-        margin = torch.tensor(batch["margin"], dtype=policy_chosen_logps.dtype).to(self.accelerator.device)
+        margin = torch.tensor(batch["margin"], dtype=policy_chosen_logps.dtype).to(
+            self.accelerator.device
+        )
         losses, chosen_rewards, rejected_rewards = self.dpo_loss(
             policy_chosen_logps,
             policy_rejected_logps,
@@ -417,10 +476,14 @@ class PreferenceTrainer(DPOTrainer):
         metrics[f"{prefix}rewards/chosen"] = chosen_rewards.cpu().mean()
         metrics[f"{prefix}rewards/rejected"] = rejected_rewards.cpu().mean()
         metrics[f"{prefix}rewards/accuracies"] = reward_accuracies.cpu().mean()
-        metrics[f"{prefix}rewards/margins"] = (chosen_rewards - rejected_rewards).cpu().mean()
+        metrics[f"{prefix}rewards/margins"] = (
+            (chosen_rewards - rejected_rewards).cpu().mean()
+        )
         metrics[f"{prefix}logps/rejected"] = policy_rejected_logps.detach().cpu().mean()
         metrics[f"{prefix}logps/chosen"] = policy_chosen_logps.detach().cpu().mean()
-        metrics[f"{prefix}logits/rejected"] = policy_rejected_logits.detach().cpu().mean()
+        metrics[f"{prefix}logits/rejected"] = (
+            policy_rejected_logits.detach().cpu().mean()
+        )
         metrics[f"{prefix}logits/chosen"] = policy_chosen_logits.detach().cpu().mean()
 
         return losses.mean(), metrics

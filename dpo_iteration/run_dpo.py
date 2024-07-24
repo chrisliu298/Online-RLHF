@@ -5,13 +5,14 @@ from typing import Optional
 import numpy as np
 import torch
 from datasets import Dataset, load_dataset
-from dpo import PreferenceTrainer
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
     TrainingArguments,
 )
+
+from dpo import PreferenceTrainer
 
 
 @dataclass
@@ -21,7 +22,9 @@ class ScriptArguments:
     """
 
     # data parameters, i.e., the KL penalty in the paper
-    beta: Optional[float] = field(default=0.1, metadata={"help": "the beta parameter for DPO loss"})
+    beta: Optional[float] = field(
+        default=0.1, metadata={"help": "the beta parameter for DPO loss"}
+    )
 
     # training parameters
     model_name_or_path: Optional[str] = field(
@@ -40,16 +43,28 @@ class ScriptArguments:
         default="/export/home/hanze/project/vllm-gen/uf_split0_offline_reward.json",  # "/export/home/data/gemma_it_2b_3w_k8_with_pairrm_rewards.json",
         metadata={"help": "the location of the evalset name or path"},
     )
-    learning_rate: Optional[float] = field(default=5e-7, metadata={"help": "optimizer learning rate"})
+    learning_rate: Optional[float] = field(
+        default=5e-7, metadata={"help": "optimizer learning rate"}
+    )
     lr_scheduler_type: Optional[str] = field(
         default="constant_with_warmup", metadata={"help": "the lr scheduler type"}
     )
-    warmup_steps: Optional[int] = field(default=100, metadata={"help": "the number of warmup steps"})
-    weight_decay: Optional[float] = field(default=0.01, metadata={"help": "the weight decay"})
-    optimizer_type: Optional[str] = field(default="paged_adamw_32bit", metadata={"help": "the optimizer type"})
+    warmup_steps: Optional[int] = field(
+        default=100, metadata={"help": "the number of warmup steps"}
+    )
+    weight_decay: Optional[float] = field(
+        default=0.01, metadata={"help": "the weight decay"}
+    )
+    optimizer_type: Optional[str] = field(
+        default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
+    )
 
-    per_device_train_batch_size: Optional[int] = field(default=1, metadata={"help": "train batch size per device"})
-    per_device_eval_batch_size: Optional[int] = field(default=1, metadata={"help": "eval batch size per device"})
+    per_device_train_batch_size: Optional[int] = field(
+        default=1, metadata={"help": "train batch size per device"}
+    )
+    per_device_eval_batch_size: Optional[int] = field(
+        default=1, metadata={"help": "eval batch size per device"}
+    )
     gradient_accumulation_steps: Optional[int] = field(
         default=16, metadata={"help": "the number of gradient accumulation steps"}
     )
@@ -57,32 +72,70 @@ class ScriptArguments:
         default=True, metadata={"help": "whether to use gradient checkpointing"}
     )
 
-    eos_padding: Optional[bool] = field(default=True, metadata={"help": "whether to pad with eos token"})
-    lora_alpha: Optional[float] = field(default=16, metadata={"help": "the lora alpha parameter"})
-    lora_dropout: Optional[float] = field(default=0.05, metadata={"help": "the lora dropout parameter"})
+    eos_padding: Optional[bool] = field(
+        default=True, metadata={"help": "whether to pad with eos token"}
+    )
+    lora_alpha: Optional[float] = field(
+        default=16, metadata={"help": "the lora alpha parameter"}
+    )
+    lora_dropout: Optional[float] = field(
+        default=0.05, metadata={"help": "the lora dropout parameter"}
+    )
     lora_r: Optional[int] = field(default=8, metadata={"help": "the lora r parameter"})
 
-    margin_scale: Optional[float] = field(default=1.0, metadata={"help": "the margin scale"})
+    margin_scale: Optional[float] = field(
+        default=1.0, metadata={"help": "the margin scale"}
+    )
 
-    max_prompt_length: Optional[int] = field(default=1000, metadata={"help": "the maximum prompt length"})
-    max_length: Optional[int] = field(default=2048, metadata={"help": "the maximum sequence length"})
-    max_steps: Optional[int] = field(default=20, metadata={"help": "max number of training steps"})
-    num_train_epochs: Optional[int] = field(default=2, metadata={"help": "max number of training epochs"})
-    logging_steps: Optional[int] = field(default=2, metadata={"help": "the logging frequency"})
-    save_strategy: Optional[str] = field(default="epoch", metadata={"help": "the saving strategy"})
-    save_steps: Optional[int] = field(default=50000, metadata={"help": "the saving frequency"})
-    eval_steps: Optional[int] = field(default=100, metadata={"help": "the evaluation frequency"})
-    run_name: Optional[str] = field(default="dpo_soft", metadata={"help": "the run name"})
-    loss_type: Optional[str] = field(default="sigmoid", metadata={"help": "the loss type"})
-    output_dir: Optional[str] = field(default="./dpo_soft", metadata={"help": "the output directory"})
-    log_freq: Optional[int] = field(default=1, metadata={"help": "the logging frequency"})
+    max_prompt_length: Optional[int] = field(
+        default=1000, metadata={"help": "the maximum prompt length"}
+    )
+    max_length: Optional[int] = field(
+        default=2048, metadata={"help": "the maximum sequence length"}
+    )
+    max_steps: Optional[int] = field(
+        default=20, metadata={"help": "max number of training steps"}
+    )
+    num_train_epochs: Optional[int] = field(
+        default=2, metadata={"help": "max number of training epochs"}
+    )
+    logging_steps: Optional[int] = field(
+        default=2, metadata={"help": "the logging frequency"}
+    )
+    save_strategy: Optional[str] = field(
+        default="epoch", metadata={"help": "the saving strategy"}
+    )
+    save_steps: Optional[int] = field(
+        default=50000, metadata={"help": "the saving frequency"}
+    )
+    eval_steps: Optional[int] = field(
+        default=100, metadata={"help": "the evaluation frequency"}
+    )
+    run_name: Optional[str] = field(
+        default="dpo_soft", metadata={"help": "the run name"}
+    )
+    loss_type: Optional[str] = field(
+        default="sigmoid", metadata={"help": "the loss type"}
+    )
+    output_dir: Optional[str] = field(
+        default="./dpo_soft", metadata={"help": "the output directory"}
+    )
+    log_freq: Optional[int] = field(
+        default=1, metadata={"help": "the logging frequency"}
+    )
 
     # instrumentation
-    sanity_check: Optional[bool] = field(default=False, metadata={"help": "only train on 1000 samples"})
+    sanity_check: Optional[bool] = field(
+        default=False, metadata={"help": "only train on 1000 samples"}
+    )
 
-    max_training_samples: Optional[int] = field(default=-1, metadata={"help": "the maximum sample size"})
+    max_training_samples: Optional[int] = field(
+        default=-1, metadata={"help": "the maximum sample size"}
+    )
 
-    choose_type: Optional[str] = field(default="max_random", metadata={"help": "the choose type"})
+    choose_type: Optional[str] = field(
+        default="max_random", metadata={"help": "the choose type"}
+    )
 
     report_to: Optional[str] = field(
         default="wandb",
@@ -100,9 +153,13 @@ class ScriptArguments:
             "https://github.com/huggingface/transformers/issues/22482#issuecomment-1595790992"
         },
     )
-    eot_token: Optional[str] = field(default="", metadata={"help": "the end of text token"})
+    eot_token: Optional[str] = field(
+        default="", metadata={"help": "the end of text token"}
+    )
     mask_prompt: Optional[bool] = field(default=False, metadata={"help": "mask prompt"})
-    len_penalty: Optional[float] = field(default=0, metadata={"help": "the length penalty"})
+    len_penalty: Optional[float] = field(
+        default=0, metadata={"help": "the length penalty"}
+    )
 
 
 def prepare_data(
@@ -163,19 +220,28 @@ def prepare_data(
                 prompts.append(sample["prompt"])
                 pos.append(sample["responses"][idx0[i]] + eot_token)
                 neg.append(sample["responses"][idx1[i]] + eot_token)
-                margin.append((sample["rewards"][idx0[i]] - sample["rewards"][idx1[i]]) * margin_scale)
+                margin.append(
+                    (sample["rewards"][idx0[i]] - sample["rewards"][idx1[i]])
+                    * margin_scale
+                )
         else:
             if sample["rewards"][idx0] > sample["rewards"][idx1]:
                 prompts.append(sample["prompt"])
                 pos.append(sample["responses"][idx0] + eot_token)
                 neg.append(sample["responses"][idx1] + eot_token)
-                margin.append((sample["rewards"][idx0] - sample["rewards"][idx1]) * margin_scale)
+                margin.append(
+                    (sample["rewards"][idx0] - sample["rewards"][idx1]) * margin_scale
+                )
             elif sample["rewards"][idx0] < sample["rewards"][idx1]:
                 prompts.append(sample["prompt"])
                 pos.append(sample["responses"][idx1] + eot_token)
                 neg.append(sample["responses"][idx0] + eot_token)
-                margin.append((-sample["rewards"][idx0] + sample["rewards"][idx1]) * margin_scale)
-    dataset = Dataset.from_dict({"prompt": prompts, "chosen": pos, "rejected": neg, "margin": margin})
+                margin.append(
+                    (-sample["rewards"][idx0] + sample["rewards"][idx1]) * margin_scale
+                )
+    dataset = Dataset.from_dict(
+        {"prompt": prompts, "chosen": pos, "rejected": neg, "margin": margin}
+    )
 
     if sanity_check:
         dataset = dataset.select(range(min(len(dataset), 100)))
@@ -224,8 +290,12 @@ if __name__ == "__main__":
         model_ref.resize_token_embeddings(len(tokenizer))
 
     def tokenize(sample):
-        tokenized_pos = tokenizer(sample["prompt"].replace("<bos>", "") + "\n" + sample["chosen"])
-        tokenized_neg = tokenizer(sample["prompt"].replace("<bos>", "") + "\n" + sample["rejected"])
+        tokenized_pos = tokenizer(
+            sample["prompt"].replace("<bos>", "") + "\n" + sample["chosen"]
+        )
+        tokenized_neg = tokenizer(
+            sample["prompt"].replace("<bos>", "") + "\n" + sample["rejected"]
+        )
         prompt_id = tokenizer(sample["prompt"])
         sample["tprompdt_ids"] = prompt_id["input_ids"]
         sample["tchosen_input_ids"] = tokenized_pos["input_ids"]

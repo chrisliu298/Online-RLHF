@@ -13,6 +13,12 @@ run_iteration() {
     local json_output=$4
     local model_output=$5
 
+    echo "iteration: $iteration"
+    echo "model_path: $model_path"
+    echo "jsonl_input: $jsonl_input"
+    echo "json_output: $json_output"
+    echo "model_output: $model_output"
+
     # Run generation
     bash generation/run_8gpu.sh $model_path
     sleep 60

@@ -95,7 +95,7 @@ class ScriptArguments:
         default=1, metadata={"help": "the logging frequency"}
     )
     save_strategy: Optional[str] = field(
-        default="epoch", metadata={"help": "the saving strategy"}
+        default="steps", metadata={"help": "the saving strategy"}
     )
     save_steps: Optional[int] = field(
         default=50000, metadata={"help": "the saving frequency"}

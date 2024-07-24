@@ -5,12 +5,8 @@ from typing import Optional
 import numpy as np
 import torch
 from datasets import Dataset, load_dataset
-from transformers import (
-    AutoModelForCausalLM,
-    AutoTokenizer,
-    HfArgumentParser,
-    TrainingArguments,
-)
+from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
+from trl import DPOConfig
 
 from dpo import PreferenceTrainer
 
@@ -55,9 +51,9 @@ class ScriptArguments:
     weight_decay: Optional[float] = field(
         default=0.01, metadata={"help": "the weight decay"}
     )
-    optimizer_type: Optional[str] = field(
-        default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
-    )
+    # optimizer_type: Optional[str] = field(
+    #     default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
+    # )
 
     per_device_train_batch_size: Optional[int] = field(
         default=1, metadata={"help": "train batch size per device"}
@@ -323,7 +319,7 @@ if __name__ == "__main__":
 
     # 4. initialize training arguments:
 
-    training_args = TrainingArguments(
+    training_args = DPOConfig(
         per_device_train_batch_size=script_args.per_device_train_batch_size,
         per_device_eval_batch_size=script_args.per_device_eval_batch_size,
         num_train_epochs=script_args.num_train_epochs,
@@ -339,7 +335,7 @@ if __name__ == "__main__":
         report_to=script_args.report_to,
         lr_scheduler_type=script_args.lr_scheduler_type,
         warmup_steps=script_args.warmup_steps,
-        optim=script_args.optimizer_type,
+        # optim=script_args.optimizer_type,
         bf16=True,
         remove_unused_columns=False,
         run_name=script_args.run_name,

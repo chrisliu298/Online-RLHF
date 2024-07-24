@@ -197,6 +197,7 @@ if __name__ == "__main__":
         per_device_eval_batch_size=script_args.per_device_eval_batch_size,
         eval_steps=script_args.eval_steps,
     )
+    training_args.nll_loss_coef = script_args.nll_loss_coef
     print(training_args)
 
     # 5. initialize the DPO trainer
@@ -214,7 +215,7 @@ if __name__ == "__main__":
         mask_prompt=script_args.mask_prompt,
         len_penalty=script_args.len_penalty,
         nll_loss_coef=script_args.nll_loss_coef,
-        callbacks=[CustomWandbCallback(nll_loss_coef=script_args.nll_loss_coef)],
+        # callbacks=[CustomWandbCallback(nll_loss_coef=script_args.nll_loss_coef)],
     )
     print("begin to train")
 

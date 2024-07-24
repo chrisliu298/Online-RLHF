@@ -339,6 +339,8 @@ if __name__ == "__main__":
         ddp_timeout=3600,
         dataset_num_proc=None,
     )
+    training_args.nll_loss_coef = script_args.nll_loss_coef
+    training_args.choose_type = script_args.choose_type
     print(training_args)
 
     # 5. initialize the DPO trainer
@@ -357,12 +359,12 @@ if __name__ == "__main__":
         mask_prompt=script_args.mask_prompt,
         len_penalty=script_args.len_penalty,
         nll_loss_coef=script_args.nll_loss_coef,
-        callbacks=[
-            CustomWandbCallback(
-                nll_loss_coef=script_args.nll_loss_coef,
-                choose_type=script_args.choose_type,
-            )
-        ],
+        # callbacks=[
+        #     CustomWandbCallback(
+        #         nll_loss_coef=script_args.nll_loss_coef,
+        #         choose_type=script_args.choose_type,
+        #     )
+        # ],
     )
     print("begin to train")
 

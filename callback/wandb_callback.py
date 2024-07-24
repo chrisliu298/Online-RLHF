@@ -1,3 +1,4 @@
+import torch.distributed as dist
 from transformers.integrations import WandbCallback
 
 
@@ -14,4 +15,5 @@ class CustomWandbCallback(WandbCallback):
     def on_train_begin(self, args, state, control, model=None, **kwargs):
         super().on_train_begin(args, state, control, model, **kwargs)
         # Log all kwargs
-        self._wandb.log(self.kwargs)
+        if dist.get_rank() == 0:
+            self._wandb.log(self.kwargs)

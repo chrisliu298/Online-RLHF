@@ -150,7 +150,7 @@ gathered_data = []
 for i in range(len(ds)):
     tmp_data = {"prompt": ds[i]["prompt"], "responses": responses[i]}
     gathered_data.append(tmp_data)
-    print(tmp_data)
+    # print(tmp_data)
 
 output_eval_dataset = {}
 output_eval_dataset["type"] = "text_only"

@@ -22,21 +22,21 @@ run_iteration() {
     # Run generation
     bash generation/run_8gpu.sh $model_path
     sleep 60
-    python generation/gen_hf.py --ports 8000 8001 8002 8003 --eos_ids 151645 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0 --dataset_name_or_path $dataset_path
+    python generation/gen_hf.py --ports 8000 8001 8002 8003 --eos_ids 151645 --tokenizer $initial_model --output_dir $json_output --K 8 --temperature 1.0 --dataset_name_or_path $jsonl_input
     pkill -f "python -m vllm.entrypoints.api_server"
 
     # Run reward labeling
     accelerate launch annotate_data/get_rewards.py --reward_name_or_path $reward_model --dataset_name_or_path $json_output --output_dir $model_output
 
     # Run DPO
-    accelerate launch --config_file ./configs/zero2.yaml dpo_iteration/run_dpo.py --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 --max_steps 1200 --choose_type max_min --train_dir $model_output --eval_dir $model_output --loss_type sigmoid --lr_scheduler_type cosine
+    accelerate launch --config_file ./configs/zero2.yaml dpo_iteration/run_dpo.py --run_name $iteration --output_dir $iteration --model_name_or_path $model_path --ref_model $initial_model --learning_rate 5e-7 --choose_type max_min --train_dir $model_output --eval_dir $model_output --loss_type sigmoid --lr_scheduler_type cosine
 }
 
 # Main loop for iterations
 for i in {1..3}
 do
     iteration_name="${initial_model}_iter${i}"
-    jsonl_input="RLHFlow/iterative-prompt-v1-iter${i}"
+    jsonl_input="${dataset_path}"
     json_output="${base_path}/${iteration_name}.json"
     model_output="${base_path}/${iteration_name}_reward.json"
     

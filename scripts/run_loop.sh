@@ -78,3 +78,5 @@ do
 
     run_iteration $iteration_name $model_path $jsonl_input $json_output $model_output
 done
+
+mv "${initial_model}_iter*" $base_path

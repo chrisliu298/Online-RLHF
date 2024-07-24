@@ -196,7 +196,7 @@ if __name__ == "__main__":
         eval_strategy=script_args.eval_strategy,
         per_device_eval_batch_size=script_args.per_device_eval_batch_size,
         eval_steps=script_args.eval_steps,
-        callback=CustomWandbCallback(nll_loss_coef=script_args.nll_loss_coef),
+        callbacks=[CustomWandbCallback(nll_loss_coef=script_args.nll_loss_coef)],
     )
     print(training_args)
 

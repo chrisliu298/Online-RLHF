@@ -338,9 +338,12 @@ if __name__ == "__main__":
         eval_strategy=script_args.eval_strategy,
         ddp_timeout=3600,
         dataset_num_proc=None,
-        callback=CustomWandbCallback(
-            nll_loss_coef=script_args.nll_loss_coef, choose_type=script_args.choose_type
-        ),
+        callbacks=[
+            CustomWandbCallback(
+                nll_loss_coef=script_args.nll_loss_coef,
+                choose_type=script_args.choose_type,
+            )
+        ],
     )
     print(training_args)
 

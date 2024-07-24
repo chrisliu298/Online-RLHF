@@ -2,6 +2,7 @@
 initial_model="Qwen2-7B-Instruct"
 reward_model="Qwen2-7B-Instruct_preference_700K"
 base_path="/mnt/data/yuhaoliu/experiments/dpo"
+dataset_path="/mnt/data/yuhaoliu/datasets/dpo_datasets/alignbench_dpo_prompts
 mkdir -p $base_path
 
 # Function to run a set of operations for a model iteration
@@ -15,7 +16,7 @@ run_iteration() {
     # Run generation
     bash generation/run_8gpu.sh $model_path
     sleep 60
-    python generation/gen_hf.py --ports 8000 8001 8002 8003 --eos_ids 151645 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0
+    python generation/gen_hf.py --ports 8000 8001 8002 8003 --eos_ids 151645 --tokenizer $initial_model --dataset_name_or_path $jsonl_input --output_dir $json_output --K 8 --temperature 1.0 --dataset_name_or_path $dataset_path
     pkill -f "python -m vllm.entrypoints.api_server"
 
     # Run reward labeling

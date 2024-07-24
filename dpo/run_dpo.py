@@ -87,7 +87,7 @@ class ScriptArguments:
         default=1, metadata={"help": "max number of training epochs"}
     )
     logging_steps: Optional[int] = field(
-        default=2, metadata={"help": "the logging frequency"}
+        default=1, metadata={"help": "the logging frequency"}
     )
     save_strategy: Optional[str] = field(
         default="epoch", metadata={"help": "the saving strategy"}
@@ -102,7 +102,7 @@ class ScriptArguments:
         default="sigmoid", metadata={"help": "the loss type"}
     )
     output_dir: Optional[str] = field(
-        default="/mnt/data2/yuhaoliu/trl_dpo", metadata={"help": "the output directory"}
+        default="/mnt/data/yuhaoliu/experiments/dpo", metadata={"help": "the output directory"}
     )
 
     # instrumentation

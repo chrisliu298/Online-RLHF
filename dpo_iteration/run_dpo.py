@@ -31,11 +31,11 @@ class ScriptArguments:
         default="",
         metadata={"help": "the location of the SFT model name or path"},
     )
-    train_dir: Optional[str] = field(
+    train_data_path: Optional[str] = field(
         default="./data/uf_split0_responses_K8_reward.json",
         metadata={"help": "the location of the dataset name or path"},
     )
-    eval_dir: Optional[str] = field(
+    eval_data_path: Optional[str] = field(
         default="/export/home/hanze/project/vllm-gen/uf_split0_offline_reward.json",  # "/export/home/data/gemma_it_2b_3w_k8_with_pairrm_rewards.json",
         metadata={"help": "the location of the evalset name or path"},
     )
@@ -45,15 +45,15 @@ class ScriptArguments:
     lr_scheduler_type: Optional[str] = field(
         default="constant_with_warmup", metadata={"help": "the lr scheduler type"}
     )
-    warmup_steps: Optional[int] = field(
-        default=100, metadata={"help": "the number of warmup steps"}
-    )
     weight_decay: Optional[float] = field(
         default=0.01, metadata={"help": "the weight decay"}
     )
     # optimizer_type: Optional[str] = field(
     #     default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
     # )
+    warmup_ratio: Optional[float] = field(
+        default=0.03, metadata={"help": "the warmup ratio"}
+    )
 
     per_device_train_batch_size: Optional[int] = field(
         default=1, metadata={"help": "train batch size per device"}
@@ -67,24 +67,23 @@ class ScriptArguments:
     gradient_checkpointing: Optional[bool] = field(
         default=True, metadata={"help": "whether to use gradient checkpointing"}
     )
+    eval_strategy: Optional[str] = field(
+        default="steps", metadata={"help": "the evaluation strategy"}
+    )
+    eval_steps: Optional[int] = field(
+        default=100, metadata={"help": "the evaluation frequency"}
+    )
 
     eos_padding: Optional[bool] = field(
         default=True, metadata={"help": "whether to pad with eos token"}
     )
-    lora_alpha: Optional[float] = field(
-        default=16, metadata={"help": "the lora alpha parameter"}
-    )
-    lora_dropout: Optional[float] = field(
-        default=0.05, metadata={"help": "the lora dropout parameter"}
-    )
-    lora_r: Optional[int] = field(default=8, metadata={"help": "the lora r parameter"})
 
     margin_scale: Optional[float] = field(
         default=1.0, metadata={"help": "the margin scale"}
     )
 
     max_prompt_length: Optional[int] = field(
-        default=1000, metadata={"help": "the maximum prompt length"}
+        default=1024, metadata={"help": "the maximum prompt length"}
     )
     max_length: Optional[int] = field(
         default=2048, metadata={"help": "the maximum sequence length"}
@@ -93,16 +92,13 @@ class ScriptArguments:
         default=2, metadata={"help": "max number of training epochs"}
     )
     logging_steps: Optional[int] = field(
-        default=2, metadata={"help": "the logging frequency"}
+        default=1, metadata={"help": "the logging frequency"}
     )
     save_strategy: Optional[str] = field(
         default="epoch", metadata={"help": "the saving strategy"}
     )
     save_steps: Optional[int] = field(
         default=50000, metadata={"help": "the saving frequency"}
-    )
-    eval_steps: Optional[int] = field(
-        default=100, metadata={"help": "the evaluation frequency"}
     )
     run_name: Optional[str] = field(
         default="dpo_soft", metadata={"help": "the run name"}
@@ -111,10 +107,8 @@ class ScriptArguments:
         default="sigmoid", metadata={"help": "the loss type"}
     )
     output_dir: Optional[str] = field(
-        default="./dpo_soft", metadata={"help": "the output directory"}
-    )
-    log_freq: Optional[int] = field(
-        default=1, metadata={"help": "the logging frequency"}
+        default="/mnt/data/yuhaoliu/experiments/dpo",
+        metadata={"help": "the output directory"},
     )
 
     # instrumentation
@@ -298,7 +292,7 @@ if __name__ == "__main__":
 
     # 2. Load the Stack-exchange paired dataset
     train_dataset = prepare_data(
-        data_dir=script_args.train_dir,
+        data_dir=script_args.train_data_path,
         margin_scale=script_args.margin_scale,
         sanity_check=script_args.sanity_check,
         choose_type=script_args.choose_type,
@@ -311,7 +305,7 @@ if __name__ == "__main__":
 
     # 3. Load evaluation dataset
     eval_dataset = prepare_data(
-        data_dir=script_args.eval_dir,
+        data_dir=script_args.eval_data_path,
         sanity_check=True,
         margin_scale=script_args.margin_scale,
         eot_token=script_args.eot_token,
@@ -334,8 +328,7 @@ if __name__ == "__main__":
         output_dir=script_args.output_dir,
         report_to=script_args.report_to,
         lr_scheduler_type=script_args.lr_scheduler_type,
-        warmup_steps=script_args.warmup_steps,
-        # optim=script_args.optimizer_type,
+        warmup_ratio=script_args.warmup_ratio,
         bf16=True,
         remove_unused_columns=False,
         run_name=script_args.run_name,
@@ -365,5 +358,5 @@ if __name__ == "__main__":
     dpo_trainer.save_model(script_args.output_dir)
 
     # 7. save
-    output_dir = os.path.join(script_args.output_dir, "final_checkpoint")
-    dpo_trainer.model.save_pretrained(output_dir)
+    # output_dir = os.path.join(script_args.output_dir, "final_checkpoint")
+    # dpo_trainer.model.save_pretrained(output_dir)

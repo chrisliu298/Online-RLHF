@@ -287,7 +287,7 @@ class PreferenceTrainer(DPOTrainer):
         mask_prompt: Optional[bool] = False,
         len_penalty: float = 0,
         nll_loss=False,
-        nll_loss_coef=0.0,
+        nll_loss_coef=0.2,
     ):
 
         if data_collator is None:

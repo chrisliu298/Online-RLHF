@@ -4,10 +4,9 @@ from typing import Optional
 
 import torch
 from datasets import load_from_disk
+from dpo import PreferenceTrainer
 from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
 from trl import DPOConfig
-
-from dpo import PreferenceTrainer
 
 
 @dataclass
@@ -102,7 +101,8 @@ class ScriptArguments:
         default="sigmoid", metadata={"help": "the loss type"}
     )
     output_dir: Optional[str] = field(
-        default="/mnt/data/yuhaoliu/experiments/dpo", metadata={"help": "the output directory"}
+        default="/mnt/data/yuhaoliu/experiments/dpo",
+        metadata={"help": "the output directory"},
     )
 
     # instrumentation
@@ -120,6 +120,12 @@ class ScriptArguments:
     mask_prompt: Optional[bool] = field(default=False, metadata={"help": "mask prompt"})
     len_penalty: Optional[float] = field(
         default=0, metadata={"help": "the length penalty"}
+    )
+    nll_loss: Optional[bool] = field(
+        default=False, metadata={"help": "whether to use nll loss"}
+    )
+    nll_loss_coef: Optional[float] = field(
+        default=0.2, metadata={"help": "the nll loss coefficient"}
     )
 
 
@@ -208,6 +214,8 @@ if __name__ == "__main__":
         max_length=script_args.max_length,
         mask_prompt=script_args.mask_prompt,
         len_penalty=script_args.len_penalty,
+        nll_loss=script_args.nll_loss,
+        nll_loss_coef=script_args.nll_loss_coef,
     )
     print("begin to train")
 

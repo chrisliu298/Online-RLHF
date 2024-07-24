@@ -286,6 +286,8 @@ class PreferenceTrainer(DPOTrainer):
         compute_metrics: Optional[Callable[[EvalLoopOutput], Dict]] = None,
         mask_prompt: Optional[bool] = False,
         len_penalty: float = 0,
+        nll_loss=False,
+        nll_loss_coef=0.0,
     ):
 
         if data_collator is None:
@@ -328,6 +330,8 @@ class PreferenceTrainer(DPOTrainer):
         )
         self.use_dpo_data_collator = True
         self.len_penalty = len_penalty
+        self.nll_loss = nll_loss
+        self.nll_loss_coef = nll_loss_coef
 
     def dpo_loss(
         self,
@@ -480,5 +484,8 @@ class PreferenceTrainer(DPOTrainer):
             policy_rejected_logits.detach().cpu().mean()
         )
         metrics[f"{prefix}logits/chosen"] = policy_chosen_logits.detach().cpu().mean()
+
+        if self.nll_loss:
+            losses += policy_nll_loss * self.nll_loss_coef
 
         return losses.mean(), metrics

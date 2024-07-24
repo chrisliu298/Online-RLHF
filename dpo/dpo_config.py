@@ -7,3 +7,4 @@ from trl import DPOConfig
 class DPOConfigWithAdditionalArgs(DPOConfig):
     nll_loss_alpha: float = 0.0
     choose_type: str = None
+    apply_chat_template: bool = False

@@ -311,6 +311,7 @@ if __name__ == "__main__":
         dataset_num_proc=None,
         nll_loss_alpha=script_args.nll_loss_alpha,
         choose_type=script_args.choose_type,
+        apply_chat_template=True,
     )
     print(training_args)
 

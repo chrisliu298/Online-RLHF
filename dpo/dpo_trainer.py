@@ -301,6 +301,7 @@ class PreferenceTrainer(DPOTrainer):
                 is_encoder_decoder=False,
                 max_target_length=max_target_length,
                 mask_prompt=mask_prompt,
+                apply_chat_template=args.apply_chat_template,
             )
         super().__init__(
             model=model,

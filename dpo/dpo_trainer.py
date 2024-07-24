@@ -32,6 +32,7 @@ class PreferenceDataCollatorWithPadding:
     is_encoder_decoder: Optional[bool] = False
     max_target_length: Optional[int] = None
     mask_prompt: Optional[bool] = False
+    apply_chat_template: bool = False
 
     def tokenize_batch_element(
         self,
@@ -50,11 +51,12 @@ class PreferenceDataCollatorWithPadding:
             label_pad_token_id  for the prompt tokens.
         """
         batch = {}
-        # prompt = self.tokenizer.apply_chat_template(
-        #     [{"role": "user", "content": prompt}],
-        #     tokenize=False,
-        #     add_generation_prompt=False,
-        # )
+        if self.apply_chat_template:
+            prompt = self.tokenizer.apply_chat_template(
+                [{"role": "user", "content": prompt}],
+                tokenize=False,
+                add_generation_prompt=False,
+            )
 
         if not self.is_encoder_decoder:
             chosen_tokens = self.tokenizer(chosen, add_special_tokens=False)
@@ -286,7 +288,6 @@ class PreferenceTrainer(DPOTrainer):
         compute_metrics: Optional[Callable[[EvalLoopOutput], Dict]] = None,
         mask_prompt: Optional[bool] = False,
         len_penalty: float = 0,
-        nll_loss_coef=0.0,
     ):
 
         if data_collator is None:
@@ -329,7 +330,7 @@ class PreferenceTrainer(DPOTrainer):
         )
         self.use_dpo_data_collator = True
         self.len_penalty = len_penalty
-        self.nll_loss_coef = nll_loss_coef
+        self.nll_loss_alpha = args.nll_loss_alpha
 
     def dpo_loss(
         self,
@@ -484,8 +485,8 @@ class PreferenceTrainer(DPOTrainer):
         metrics[f"{prefix}logits/chosen"] = policy_chosen_logits.detach().cpu().mean()
 
         losses = losses.mean()
-        if self.nll_loss_coef > 0:
-            losses = losses + policy_nll_loss * self.nll_loss_coef
+        if self.nll_loss_alpha > 0:
+            losses = losses + policy_nll_loss * self.nll_loss_alpha
             metrics[f"{prefix}nll_loss"] = policy_nll_loss.detach().cpu().mean()
 
         return losses, metrics

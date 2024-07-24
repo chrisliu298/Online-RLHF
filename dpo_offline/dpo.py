@@ -487,5 +487,6 @@ class PreferenceTrainer(DPOTrainer):
 
         if self.nll_loss:
             losses += policy_nll_loss * self.nll_loss_coef
+            metrics[f"{prefix}nll_loss"] = policy_nll_loss.detach().cpu().mean()
 
         return losses.mean(), metrics

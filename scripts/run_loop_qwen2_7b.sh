@@ -2,7 +2,7 @@
 initial_model="Qwen2-7B-Instruct"
 reward_model="Qwen2-7B-Instruct_preference_700K"
 base_path="/mnt/data/yuhaoliu/experiments/dpo"
-mkdir $base_path
+mkdir -p $base_path
 
 # Function to run a set of operations for a model iteration
 run_iteration() {

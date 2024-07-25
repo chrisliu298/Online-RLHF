@@ -125,7 +125,7 @@ print(ds)
 # use tokenizer.apply_template to apply the template to the prompt
 ds = ds.map(
     lambda x: {
-        "prompt": x[script_args.dataset_key],
+        "prompt": x[script_args.dataset_key][0]["content"],
         "prompt_with_template": tokenizer.apply_chat_template(
             x[script_args.dataset_key], tokenize=False, add_generation_prompt=True
         ),

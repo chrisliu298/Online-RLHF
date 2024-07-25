@@ -103,12 +103,9 @@ def change_of_format(prom, resp):
 
     final_resp = resp.split("GPT4 Correct User")[0]
     """
-    prom = prom[0]["content"]
-    final_resp = resp
-
     message = [
         {"role": "user", "content": prom},
-        {"role": "assistant", "content": final_resp},
+        {"role": "assistant", "content": resp},
     ]
     formatted = rm_tokenizer.apply_chat_template(message, tokenize=False)
     if rm_tokenizer.bos_token and rm_tokenizer.bos_token in formatted:

@@ -16,26 +16,22 @@ class ScriptArguments:
     The arguments for the DPO training script.
     """
 
-    # data parameters, i.e., the KL penalty in the paper
     beta: Optional[float] = field(
         default=0.1, metadata={"help": "the beta parameter for DPO loss"}
     )
-
-    # training parameters
     model_name_or_path: Optional[str] = field(
-        default="HuggingFaceH4/mistral-7b-sft-beta",
+        default="Qwen2-7B-Instruct",
         metadata={"help": "the location of the model name or path"},
     )
     ref_model: Optional[str] = field(
-        default="",
-        metadata={"help": "the location of the SFT model name or path"},
+        default="", metadata={"help": "the location of the SFT model name or path"}
     )
     train_data_path: Optional[str] = field(
-        default="./data/uf_split0_responses_K8_reward.json",
+        default="train.json",
         metadata={"help": "the location of the dataset name or path"},
     )
     eval_data_path: Optional[str] = field(
-        default="/export/home/hanze/project/vllm-gen/uf_split0_offline_reward.json",  # "/export/home/data/gemma_it_2b_3w_k8_with_pairrm_rewards.json",
+        default="eval.json",
         metadata={"help": "the location of the evalset name or path"},
     )
     learning_rate: Optional[float] = field(
@@ -47,13 +43,12 @@ class ScriptArguments:
     weight_decay: Optional[float] = field(
         default=0.01, metadata={"help": "the weight decay"}
     )
-    # optimizer_type: Optional[str] = field(
-    #     default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
-    # )
+    optimizer_type: Optional[str] = field(
+        default="paged_adamw_32bit", metadata={"help": "the optimizer type"}
+    )
     warmup_ratio: Optional[float] = field(
         default=0.03, metadata={"help": "the warmup ratio"}
     )
-
     per_device_train_batch_size: Optional[int] = field(
         default=1, metadata={"help": "train batch size per device"}
     )
@@ -72,15 +67,12 @@ class ScriptArguments:
     eval_steps: Optional[int] = field(
         default=100, metadata={"help": "the evaluation frequency"}
     )
-
     eos_padding: Optional[bool] = field(
         default=True, metadata={"help": "whether to pad with eos token"}
     )
-
     margin_scale: Optional[float] = field(
         default=1.0, metadata={"help": "the margin scale"}
     )
-
     max_prompt_length: Optional[int] = field(
         default=1024, metadata={"help": "the maximum prompt length"}
     )
@@ -100,29 +92,24 @@ class ScriptArguments:
         default=1e8, metadata={"help": "the saving frequency"}
     )
     run_name: Optional[str] = field(
-        default="dpo_soft", metadata={"help": "the run name"}
+        default="iterative_dpo", metadata={"help": "the run name"}
     )
     loss_type: Optional[str] = field(
         default="sigmoid", metadata={"help": "the loss type"}
     )
     output_dir: Optional[str] = field(
-        default="/mnt/data/yuhaoliu/experiments/dpo",
+        default="/mnt/data/yuhaoliu/experiments/iterative_dpo",
         metadata={"help": "the output directory"},
     )
-
-    # instrumentation
     sanity_check: Optional[bool] = field(
         default=False, metadata={"help": "only train on 1000 samples"}
     )
-
     max_training_samples: Optional[int] = field(
         default=-1, metadata={"help": "the maximum sample size"}
     )
-
     choose_type: Optional[str] = field(
         default="max_random", metadata={"help": "the choose type"}
     )
-
     report_to: Optional[str] = field(
         default="wandb",
         metadata={
@@ -144,10 +131,8 @@ class ScriptArguments:
 
 
 def prepare_data(
-    data_dir: str = "/home/xiongwei/data/helpful/rm/rm1003.json",
+    data_dir: str,
     sanity_check: bool = False,
-    cache_dir: str = None,
-    num_proc=24,
     margin_scale=1,
     choose_type="random",
     eot_token="",
@@ -265,7 +250,7 @@ if __name__ == "__main__":
             model.resize_token_embeddings(len(tokenizer))
             model_ref.resize_token_embeddings(len(tokenizer))
 
-    # 2. Load the Stack-exchange paired dataset
+    # 2. Load the dataset
     train_dataset = prepare_data(
         data_dir=script_args.train_data_path,
         margin_scale=script_args.margin_scale,
@@ -274,7 +259,6 @@ if __name__ == "__main__":
         eot_token=script_args.eot_token,
         length_penalty=script_args.len_penalty,
     )
-
     if script_args.max_training_samples > 0:
         train_dataset = train_dataset.select(range(script_args.max_training_samples))
 
@@ -288,30 +272,31 @@ if __name__ == "__main__":
 
     # 4. initialize training arguments:
     training_args = DPOConfigWithAdditionalArgs(
-        per_device_train_batch_size=script_args.per_device_train_batch_size,
-        per_device_eval_batch_size=script_args.per_device_eval_batch_size,
-        num_train_epochs=script_args.num_train_epochs,
-        save_strategy=script_args.save_strategy,
-        logging_steps=script_args.logging_steps,
-        save_steps=script_args.save_steps,
+        apply_chat_template=True,
+        bf16=True,
+        choose_type=script_args.choose_type,
+        dataset_num_proc=None,
+        ddp_timeout=3600,
+        eval_steps=script_args.eval_steps,
+        eval_strategy=script_args.eval_strategy,
+        evaluation_strategy="steps",
         gradient_accumulation_steps=script_args.gradient_accumulation_steps,
         gradient_checkpointing=script_args.gradient_checkpointing,
         learning_rate=script_args.learning_rate,
-        evaluation_strategy="steps",
-        eval_steps=script_args.eval_steps,
-        output_dir=script_args.output_dir,
-        report_to=script_args.report_to,
+        logging_steps=script_args.logging_steps,
         lr_scheduler_type=script_args.lr_scheduler_type,
-        warmup_ratio=script_args.warmup_ratio,
-        bf16=True,
-        remove_unused_columns=False,
-        run_name=script_args.run_name,
-        eval_strategy=script_args.eval_strategy,
-        ddp_timeout=3600,
-        dataset_num_proc=None,
         nll_loss_alpha=script_args.nll_loss_alpha,
-        choose_type=script_args.choose_type,
-        apply_chat_template=True,
+        num_train_epochs=script_args.num_train_epochs,
+        optim=script_args.optimizer_type,
+        output_dir=script_args.output_dir,
+        per_device_eval_batch_size=script_args.per_device_eval_batch_size,
+        per_device_train_batch_size=script_args.per_device_train_batch_size,
+        remove_unused_columns=False,
+        report_to=script_args.report_to,
+        run_name=script_args.run_name,
+        save_steps=script_args.save_steps,
+        save_strategy=script_args.save_strategy,
+        warmup_ratio=script_args.warmup_ratio,
     )
     print(training_args)
 
@@ -321,14 +306,14 @@ if __name__ == "__main__":
         model_ref,
         args=training_args,
         beta=script_args.beta,
-        train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        tokenizer=tokenizer,
-        loss_type=script_args.loss_type,
-        max_prompt_length=script_args.max_prompt_length,
-        max_length=script_args.max_length,
-        mask_prompt=script_args.mask_prompt,
         len_penalty=script_args.len_penalty,
+        loss_type=script_args.loss_type,
+        mask_prompt=script_args.mask_prompt,
+        max_length=script_args.max_length,
+        max_prompt_length=script_args.max_prompt_length,
+        tokenizer=tokenizer,
+        train_dataset=train_dataset,
     )
     print("begin to train")
 

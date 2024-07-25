@@ -128,6 +128,9 @@ class ScriptArguments:
     nll_loss_alpha: Optional[float] = field(
         default=0.0, metadata={"help": "the nll loss coefficient"}
     )
+    num_generated_samples: Optional[int] = field(
+        default=2, metadata={"help": "the number of generated samples"}
+    )
 
 
 def prepare_data(
@@ -296,6 +299,7 @@ if __name__ == "__main__":
         save_steps=script_args.save_steps,
         save_strategy=script_args.save_strategy,
         warmup_ratio=script_args.warmup_ratio,
+        num_generated_samples=script_args.num_generated_samples,
     )
     print(training_args)
 

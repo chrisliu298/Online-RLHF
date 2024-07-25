@@ -125,7 +125,7 @@ print(ds)
 # use tokenizer.apply_template to apply the template to the prompt
 ds = ds.map(
     lambda x: {
-        "prompt": tokenizer.apply_chat_template(
+        "prompt_with_template": tokenizer.apply_chat_template(
             x[script_args.dataset_key], tokenize=False, add_generation_prompt=True
         )
     }
@@ -135,7 +135,10 @@ ds = ds.map(
 with ThreadPoolExecutor(max_workers=script_args.max_workers) as executor:
     result = [
         executor.submit(
-            query_model, ds[i]["prompt"], default_args, ports[i % len(ports)]
+            query_model,
+            ds[i]["prompt_with_template"],
+            default_args,
+            ports[i % len(ports)],
         )
         for i in range(len(ds))
     ]

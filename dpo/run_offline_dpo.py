@@ -162,7 +162,6 @@ if __name__ == "__main__":
 
     # 4. initialize training arguments:
     training_args = DPOConfigWithAdditionalArgs(
-        apply_chat_template=True,
         bf16=True,
         dataset_num_proc=None,
         ddp_timeout=3600,

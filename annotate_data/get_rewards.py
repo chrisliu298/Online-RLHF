@@ -2,12 +2,13 @@ import json
 import os
 from dataclasses import dataclass, field
 from typing import Optional
+
 import numpy as np
 import torch
+from accelerate import Accelerator
 from datasets import load_dataset
 from tqdm import tqdm
 from transformers import AutoTokenizer, HfArgumentParser, pipeline
-from accelerate import Accelerator
 
 tqdm.pandas()
 
@@ -109,7 +110,9 @@ def change_of_format(prom, resp):
         {"role": "user", "content": prom},
         {"role": "assistant", "content": final_resp},
     ]
-    return rm_tokenizer.apply_chat_template(message, tokenize=False).replace(rm_tokenizer.bos_token, "")
+    return rm_tokenizer.apply_chat_template(message, tokenize=False).replace(
+        rm_tokenizer.bos_token, ""
+    )
 
 
 data = []
@@ -120,13 +123,22 @@ with torch.no_grad():
         # The VLLM may not generate responses for some prompts because it is too long, we skip them
         if len(sample["responses"]) < script_args.K:
             continue
-        # test_texts = [change_of_format(sample['prompt'], tmp_output) for tmp_output in sample['responses']]
         test_texts = [
-            sample["prompt"] + script_args.input_output_delimiter + tmp_output.strip()
+            change_of_format(sample["prompt"], tmp_output)
             for tmp_output in sample["responses"]
         ]
+        # test_texts = [
+        #     sample["prompt"] + script_args.input_output_delimiter + tmp_output.strip()
+        #     for tmp_output in sample["responses"]
+        # ]
         rewards = get_reward(test_texts)
-        data.append({"prompt": sample["prompt"], "responses": sample["responses"], "rewards": rewards})
+        data.append(
+            {
+                "prompt": sample["prompt"],
+                "responses": sample["responses"],
+                "rewards": rewards,
+            }
+        )
 
 
 # Send the data to other GPUs

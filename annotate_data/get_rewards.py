@@ -103,7 +103,7 @@ def change_of_format(prom, resp):
 
     final_resp = resp.split("GPT4 Correct User")[0]
     """
-    prom = prom
+    prom = prom[0]["content"]
     final_resp = resp
 
     message = [

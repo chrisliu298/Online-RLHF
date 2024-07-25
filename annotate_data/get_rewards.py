@@ -110,9 +110,10 @@ def change_of_format(prom, resp):
         {"role": "user", "content": prom},
         {"role": "assistant", "content": final_resp},
     ]
-    return rm_tokenizer.apply_chat_template(message, tokenize=False).replace(
-        rm_tokenizer.bos_token, ""
-    )
+    formatted = rm_tokenizer.apply_chat_template(message, tokenize=False)
+    if rm_tokenizer.bos_token:
+        formatted = formatted.replace(rm_tokenizer.bos_token, "")
+    return formatted
 
 
 data = []

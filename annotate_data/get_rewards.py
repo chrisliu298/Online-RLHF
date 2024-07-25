@@ -111,7 +111,7 @@ def change_of_format(prom, resp):
         {"role": "assistant", "content": final_resp},
     ]
     formatted = rm_tokenizer.apply_chat_template(message, tokenize=False)
-    if rm_tokenizer.bos_token:
+    if rm_tokenizer.bos_token and rm_tokenizer.bos_token in formatted:
         formatted = formatted.replace(rm_tokenizer.bos_token, "")
     return formatted
 

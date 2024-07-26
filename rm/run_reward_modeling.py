@@ -89,6 +89,9 @@ class ScriptArguments:
     logging_steps: Optional[int] = field(
         default=1, metadata={"help": "The logging steps"}
     )
+    min_lr: Optional[float] = field(
+        default=0.0, metadata={"help": "The minimum learning rate"}
+    )
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
@@ -143,6 +146,7 @@ training_args = TrainingArguments(
     logging_steps=script_args.logging_steps,
     optim=script_args.optim,
     lr_scheduler_type=script_args.lr_scheduler_type,
+    lr_scheduler_kwargs={"min_lr": script_args.min_lr},
     warmup_ratio=script_args.warmup_ratio,
     warmup_steps=script_args.warmup_steps,
     report_to="wandb",

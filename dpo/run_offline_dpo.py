@@ -39,6 +39,9 @@ class ScriptArguments:
     lr_scheduler_type: Optional[str] = field(
         default="cosine", metadata={"help": "the lr scheduler type"}
     )
+    min_lr: Optional[float] = field(
+        default=0.0, metadata={"help": "the minimum learning rate"}
+    )
     weight_decay: Optional[float] = field(
         default=0.01, metadata={"help": "the weight decay"}
     )
@@ -172,6 +175,7 @@ if __name__ == "__main__":
         learning_rate=script_args.learning_rate,
         logging_steps=script_args.logging_steps,
         lr_scheduler_type=script_args.lr_scheduler_type,
+        lr_scheduler_kwargs={"min_lr": script_args.min_lr},
         nll_loss_alpha=script_args.nll_loss_alpha,
         num_train_epochs=script_args.num_train_epochs,
         optim=script_args.optimizer_type,

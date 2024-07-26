@@ -174,5 +174,5 @@ trainer = RewardTrainer(
     ),
 )
 trainer.train()
-trainer.save_model(output_name + "/last_checkpoint")
-tokenizer.save_pretrained(output_name + "/last_checkpoint")
+trainer.save_model(output_name)
+tokenizer.save_pretrained(output_name)

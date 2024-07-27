@@ -92,6 +92,9 @@ class ScriptArguments:
     min_lr: Optional[float] = field(
         default=0.0, metadata={"help": "The minimum learning rate"}
     )
+    add_padding_token: Optional[bool] = field(
+        default=False, metadata={"help": "Add padding token"}
+    )
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
@@ -109,7 +112,8 @@ script_args = parser.parse_args_into_dataclasses()[0]
 tokenizer_name = script_args.model_name
 tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=False)
 
-tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+if script_args.add_padding_token:
+    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
 tokenizer.truncation_side = "left"
 tokenizer.model_max_length = script_args.max_length
 
@@ -161,8 +165,9 @@ model = AutoModelForSequenceClassification.from_pretrained(
     attn_implementation="flash_attention_2",
 )
 model.config.use_cache = not script_args.gradient_checkpointing
-model.config.pad_token_id = tokenizer.pad_token_id
-model.resize_token_embeddings(len(tokenizer))
+if script_args.add_padding_token:
+    model.config.pad_token_id = tokenizer.pad_token_id
+    model.resize_token_embeddings(len(tokenizer))
 
 trainer = RewardTrainer(
     model=model,

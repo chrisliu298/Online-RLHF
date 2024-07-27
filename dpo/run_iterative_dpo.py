@@ -131,6 +131,9 @@ class ScriptArguments:
     num_generations: Optional[int] = field(
         default=2, metadata={"help": "the number of generated samples"}
     )
+    reward_model_name: Optional[str] = field(
+        default=None, metadata={"help": "the reward model name"}
+    )
 
 
 def prepare_data(
@@ -300,6 +303,7 @@ if __name__ == "__main__":
         save_strategy=script_args.save_strategy,
         warmup_ratio=script_args.warmup_ratio,
         num_generations=script_args.num_generations,
+        reward_model_name=script_args.reward_model_name,
     )
     print(training_args)
 

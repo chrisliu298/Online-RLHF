@@ -134,6 +134,10 @@ class ScriptArguments:
     reward_model_name: Optional[str] = field(
         default=None, metadata={"help": "the reward model name"}
     )
+    use_prev_iter_as_ref: Optional[str] = field(
+        default="false",
+        metadata={"help": "use the previous iteration model as the reference model"},
+    )
 
 
 def prepare_data(
@@ -305,6 +309,7 @@ if __name__ == "__main__":
         num_generations=script_args.num_generations,
         reward_model_name=script_args.reward_model_name,
         len_penalty=script_args.len_penalty,
+        use_prev_iter_as_ref=script_args.use_prev_iter_as_ref,
     )
     print(training_args)
 

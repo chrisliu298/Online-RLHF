@@ -18,5 +18,6 @@ do
         --max-num-seqs=200 \
         --host 127.0.0.1 --tensor-parallel-size 1 \
         --port $((8000+i)) \
+        --enable-chunked-prefill \
     &
 done

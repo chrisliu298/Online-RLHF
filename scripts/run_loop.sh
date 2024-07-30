@@ -151,5 +151,5 @@ do
     fi
 
     run_iteration $iteration_name $model_path $prompts $prompts_responses $response_rewards
-    cp -r "${initial_model}_iter${i}" $base_path
+    # cp -r "${initial_model}_iter${i}" $base_path
 done

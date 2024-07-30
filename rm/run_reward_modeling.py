@@ -62,7 +62,7 @@ class ScriptArguments:
         default="paged_adamw_32bit", metadata={"help": "The optimizer to use."}
     )
     lr_scheduler_type: Optional[str] = field(
-        default="cosine", metadata={"help": "The lr scheduler"}
+        default="cosine_with_min_lr", metadata={"help": "The lr scheduler"}
     )
     warmup_ratio: Optional[float] = field(
         default=0.0, metadata={"help": "The warmup ratio"}

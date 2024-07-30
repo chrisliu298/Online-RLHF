@@ -6,24 +6,25 @@ python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -U deepspeed b
 python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple flash-attn --no-build-isolation
 
 # Parameters
-REWARD_MODELS_PATH="/mnt/data/yuhaoliu/models/bt_models"
-HF_MODELS_PATH="/mnt/data/yuhaoliu/models/hf_models"
+USER_PATH="/mnt/data/yuhaoliu"
+REWARD_MODELS_PATH="${USER_PATH}/models/bt_models"
+HF_MODELS_PATH="${USER_PATH}/models/hf_models"
 task_name="internal_prompts"  # prompt_collection_v0.1
 initial_model="Qwen2-7B-Instruct"
 ref_model=$initial_model
 reward_model="Qwen2-7B-Instruct_pair_data_v2_80K_wsafety_1_2e-6_0_cosine_with_min_lr"
 # dataset_paths=(
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter1-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter2-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter3-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter4-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter5-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter6-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter7-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter8-20K"
-#     "/mnt/data/yuhaoliu/datasets/dpo_datasets/iterative-prompt-v1-iter9-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter1-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter2-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter3-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter4-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter5-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter6-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter7-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter8-20K"
+#     "${USER_PATH}/datasets/dpo_datasets/iterative-prompt-v1-iter9-20K"
 # )
-dataset_paths=("/mnt/data/yuhaoliu/datasets/dpo_datasets/internal_prompts/prompts_19K")
+dataset_paths=("${USER_PATH}/datasets/dpo_datasets/internal_prompts/prompts_19K")
 start_from_iter=1
 
 # Hyperparameters
@@ -37,7 +38,7 @@ nll_loss_alpha=0.0
 len_penalty=0.0
 
 # Setup
-base_path="/mnt/data/yuhaoliu/experiments/${task_name}"
+base_path="${USER_PATH}/experiments/${task_name}"
 mkdir -p $base_path
 
 # Copy models and dataset

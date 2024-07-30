@@ -12,6 +12,7 @@ MODEL_PATH=$1
 # 使用for循环启动8个服务实例，每个实例使用不同的GPU和端口
 for i in {0..7}
 do
+    echo "Starting API server on GPU $i"
     CUDA_VISIBLE_DEVICES=$i python -m vllm.entrypoints.api_server \
         --model $MODEL_PATH \
         --gpu-memory-utilization=0.9 \

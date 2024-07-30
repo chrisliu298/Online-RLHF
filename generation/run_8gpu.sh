@@ -20,5 +20,4 @@ do
         --port $((8000+i)) \
         --enable-prefix-caching \
         --enable-chunked-prefill
-    &
 done

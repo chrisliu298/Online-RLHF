@@ -304,6 +304,7 @@ if __name__ == "__main__":
         warmup_ratio=script_args.warmup_ratio,
         num_generations=script_args.num_generations,
         reward_model_name=script_args.reward_model_name,
+        len_penalty=script_args.len_penalty,
     )
     print(training_args)
 

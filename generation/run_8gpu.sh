@@ -20,5 +20,6 @@ do
         --host 127.0.0.1 --tensor-parallel-size 1 \
         --port $((8000+i)) \
         --enable-prefix-caching \
-        --enable-chunked-prefill
+        --enable-chunked-prefill \
+    &
 done

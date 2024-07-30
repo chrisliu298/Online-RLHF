@@ -162,4 +162,4 @@ cython_debug/
 #.idea/
 
 .DS_Store
-run_loop_private.sh
+setup_private.sh

@@ -30,7 +30,7 @@ class ScriptArguments:
         metadata={"help": "the location of the dataset name or path"},
     )
     eval_data_path: Optional[str] = field(
-        default="eval",
+        default=None,
         metadata={"help": "the location of the eval dataset name or path"},
     )
     learning_rate: Optional[float] = field(
@@ -161,7 +161,9 @@ if __name__ == "__main__":
         train_dataset = train_dataset.select(range(script_args.max_training_samples))
 
     # 3. Load evaluation dataset
-    eval_dataset = load_from_disk(script_args.eval_data_path)
+    eval_dataset = None
+    if script_args.eval_data_path:
+        eval_dataset = load_from_disk(script_args.eval_data_path)
 
     # 4. initialize training arguments:
     training_args = DPOConfigWithAdditionalArgs(

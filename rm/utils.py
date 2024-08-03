@@ -67,7 +67,7 @@ def build_dataset_local(tokenizer, train_path, skip_tokenization):
 
     dataset = load_from_disk(train_path).shuffle(seed=42)
     if not skip_tokenization:
-        dataset = dataset.map(tokenize)
+        dataset = dataset.map(tokenize, num_proc=8)
     return dataset
 
 

@@ -36,7 +36,7 @@ def build_dataset(tokenizer, train_path):
         return sample
 
     dataset = load_dataset(train_path, split="train").shuffle(seed=42)
-    dataset = dataset.map(tokenize, num_proc=os.cpu_count())
+    dataset = dataset.map(tokenize, num_proc=8)
     return dataset
 
 

@@ -113,7 +113,7 @@ script_args = parser.parse_args_into_dataclasses()[0]
 
 # Load the value-head model and tokenizer.
 tokenizer_name = script_args.model_name
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=False)
+tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
 
 if script_args.add_padding_token:
     tokenizer.add_special_tokens({"pad_token": "[PAD]"})

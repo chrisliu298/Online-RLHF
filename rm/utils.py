@@ -40,7 +40,7 @@ def build_dataset(tokenizer, train_path):
     return dataset
 
 
-def build_dataset_local(tokenizer, train_path):
+def build_dataset_local(tokenizer, train_path, skip_tokenization):
 
     def tokenize(sample):
         try:
@@ -66,7 +66,8 @@ def build_dataset_local(tokenizer, train_path):
         return sample
 
     dataset = load_from_disk(train_path).shuffle(seed=42)
-    dataset = dataset.map(tokenize)
+    if not skip_tokenization:
+        dataset = dataset.map(tokenize)
     return dataset
 
 

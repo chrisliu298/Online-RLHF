@@ -95,6 +95,9 @@ class ScriptArguments:
     add_padding_token: Optional[bool] = field(
         default=False, metadata={"help": "Add padding token"}
     )
+    skip_tokenization: Optional[bool] = field(
+        default=False, metadata={"help": "Skip tokenization"}
+    )
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
@@ -122,8 +125,12 @@ train_path = script_args.train_set_path
 eval_path = script_args.eval_set_path
 output_name = script_args.output_dir
 if script_args.load_data_from_local:
-    train_dataset = build_dataset_local(tokenizer, train_path)
-    eval_dataset = build_dataset_local(tokenizer, eval_path)
+    train_dataset = build_dataset_local(
+        tokenizer, train_path, script_args.skip_tokenization
+    )
+    eval_dataset = build_dataset_local(
+        tokenizer, eval_path, script_args.skip_tokenization
+    )
 else:
     train_dataset = build_dataset(tokenizer, train_path)
     eval_dataset = build_dataset(tokenizer, eval_path)

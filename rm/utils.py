@@ -13,20 +13,16 @@ from transformers.utils import PaddingStrategy
 def build_dataset(tokenizer, train_path):
 
     def tokenize(sample):
-        try:
-            sample["positive"] = tokenizer.apply_chat_template(
-                sample["chosen"], tokenize=False, add_generation_prompt=False
-            ).replace(tokenizer.bos_token, "")
-            sample["negative"] = tokenizer.apply_chat_template(
-                sample["rejected"], tokenize=False, add_generation_prompt=False
-            ).replace(tokenizer.bos_token, "")
-        except:
-            sample["positive"] = tokenizer.apply_chat_template(
-                sample["chosen"], tokenize=False, add_generation_prompt=False
-            )
-            sample["negative"] = tokenizer.apply_chat_template(
-                sample["rejected"], tokenize=False, add_generation_prompt=False
-            )
+        sample["positive"] = tokenizer.apply_chat_template(
+            sample["chosen"], tokenize=False, add_generation_prompt=False
+        )
+        sample["negative"] = tokenizer.apply_chat_template(
+            sample["rejected"], tokenize=False, add_generation_prompt=False
+        )
+        if tokenizer.bos_token is not None:
+            bos_token_len = len(tokenizer.bos_token)
+            sample["positive"] = sample["positive"][bos_token_len:]
+            sample["negative"] = sample["negative"][bos_token_len:]
         tokenized_pos = tokenizer(sample["positive"], truncation=True)
         tokenized_neg = tokenizer(sample["negative"], truncation=True)
         sample["input_ids_j"] = tokenized_pos["input_ids"]
@@ -43,20 +39,16 @@ def build_dataset(tokenizer, train_path):
 def build_dataset_local(tokenizer, train_path, skip_tokenization):
 
     def tokenize(sample):
-        try:
-            sample["positive"] = tokenizer.apply_chat_template(
-                sample["chosen"], tokenize=False, add_generation_prompt=False
-            ).replace(tokenizer.bos_token, "")
-            sample["negative"] = tokenizer.apply_chat_template(
-                sample["rejected"], tokenize=False, add_generation_prompt=False
-            ).replace(tokenizer.bos_token, "")
-        except:
-            sample["positive"] = tokenizer.apply_chat_template(
-                sample["chosen"], tokenize=False, add_generation_prompt=False
-            )
-            sample["negative"] = tokenizer.apply_chat_template(
-                sample["rejected"], tokenize=False, add_generation_prompt=False
-            )
+        sample["positive"] = tokenizer.apply_chat_template(
+            sample["chosen"], tokenize=False, add_generation_prompt=False
+        )
+        sample["negative"] = tokenizer.apply_chat_template(
+            sample["rejected"], tokenize=False, add_generation_prompt=False
+        )
+        if tokenizer.bos_token is not None:
+            bos_token_len = len(tokenizer.bos_token)
+            sample["positive"] = sample["positive"][bos_token_len:]
+            sample["negative"] = sample["negative"][bos_token_len:]
         tokenized_pos = tokenizer(sample["positive"], truncation=True)
         tokenized_neg = tokenizer(sample["negative"], truncation=True)
         sample["input_ids_j"] = tokenized_pos["input_ids"]

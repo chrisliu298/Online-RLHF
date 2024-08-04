@@ -128,9 +128,7 @@ if script_args.load_data_from_local:
     train_dataset = build_dataset_local(
         tokenizer, train_path, script_args.skip_tokenization
     )
-    eval_dataset = build_dataset_local(
-        tokenizer, eval_path, script_args.skip_tokenization
-    )
+    eval_dataset = build_dataset_local(tokenizer, eval_path)
 else:
     train_dataset = build_dataset(tokenizer, train_path)
     eval_dataset = build_dataset(tokenizer, eval_path)

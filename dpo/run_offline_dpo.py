@@ -118,6 +118,10 @@ class ScriptArguments:
     nll_loss_alpha: Optional[float] = field(
         default=0.0, metadata={"help": "the nll loss coefficient"}
     )
+    deepspeed: Optional[str] = field(
+        default=None,
+        metadata={"help": "the deepspeed configuration file"},
+    )
 
 
 if __name__ == "__main__":
@@ -190,6 +194,7 @@ if __name__ == "__main__":
         save_steps=script_args.save_steps,
         save_strategy=script_args.save_strategy,
         warmup_ratio=script_args.warmup_ratio,
+        deepspeed=script_args.deepspeed,
     )
     print(training_args)
 

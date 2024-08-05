@@ -98,6 +98,10 @@ class ScriptArguments:
     skip_tokenization: Optional[bool] = field(
         default=False, metadata={"help": "Skip tokenization"}
     )
+    deepspeed: Optional[str] = field(
+        default=None,
+        metadata={"help": "Use deepspeed for training. Provide the path to the deepspeed config."},
+    )
 
     def __post_init__(self):
         if self.output_dir == "./bt_models":
@@ -161,6 +165,7 @@ training_args = TrainingArguments(
     per_device_eval_batch_size=script_args.per_device_eval_batch_size,
     eval_steps=script_args.eval_steps,
     run_name=script_args.run_name,
+    deepspeed=script_args.deepspeed,
 )
 
 model = AutoModelForSequenceClassification.from_pretrained(

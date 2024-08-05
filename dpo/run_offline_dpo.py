@@ -3,10 +3,9 @@ from typing import Optional
 
 import torch
 from datasets import load_from_disk
+from dpo_config import DPOConfigWithAdditionalArgs
+from dpo_trainer import PreferenceTrainer
 from transformers import AutoModelForCausalLM, AutoTokenizer, HfArgumentParser
-
-from dpo.dpo_config import DPOConfigWithAdditionalArgs
-from dpo.dpo_trainer import PreferenceTrainer
 
 
 @dataclass

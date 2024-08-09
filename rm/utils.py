@@ -35,7 +35,7 @@ def build_dataset(tokenizer, train_path):
     return dataset
 
 
-def build_dataset_local(tokenizer, train_path, skip_tokenization):
+def build_dataset_local(tokenizer, train_path):
 
     def tokenize(sample):
         sample["positive"] = tokenizer.apply_chat_template(
@@ -56,8 +56,20 @@ def build_dataset_local(tokenizer, train_path, skip_tokenization):
         return sample
 
     dataset = load_from_disk(train_path).shuffle(seed=42)
-    if not skip_tokenization:
-        dataset = dataset.map(tokenize, num_proc=8)
+    if set(dataset.features.keys()) == set(
+        [
+            "chosen",
+            "rejected",
+            "positive",
+            "negative",
+            "input_ids_j",
+            "attention_mask_j",
+            "input_ids_k",
+            "attention_mask_k",
+        ]
+    ):
+        return dataset
+    dataset = dataset.map(tokenize, num_proc=8)
     return dataset
 
 

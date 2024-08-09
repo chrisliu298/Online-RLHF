@@ -102,9 +102,7 @@ class ScriptArguments:
     add_padding_token: Optional[bool] = field(
         default=False, metadata={"help": "Add padding token"}
     )
-    skip_tokenization: Optional[bool] = field(
-        default=False, metadata={"help": "Skip tokenization"}
-    )
+
     deepspeed: Optional[str] = field(
         default=None,
         metadata={
@@ -129,19 +127,16 @@ tokenizer.model_max_length = script_args.max_length
 train_path = script_args.train_set_path
 eval_paths = script_args.eval_set_path
 if script_args.load_data_from_local:
-    train_dataset = build_dataset_local(
-        tokenizer, train_path, script_args.skip_tokenization
-    )
-    # eval_dataset = build_dataset_local(tokenizer, eval_path, False)
+    train_dataset = build_dataset_local(tokenizer, train_path)
     eval_datasets = {
-        eval_path.split("/")[-1]: build_dataset_local(tokenizer, eval_path, False)
+        eval_path.split("/")[-1]: build_dataset_local(tokenizer, eval_path)
         for eval_path in eval_paths
     }
 else:
     train_dataset = build_dataset(tokenizer, train_path)
-    # eval_dataset = build_dataset(tokenizer, eval_path)
     eval_datasets = {
-        eval_path.split("/")[-1]: build_dataset(tokenizer, eval_path) for eval_path in eval_paths
+        eval_path.split("/")[-1]: build_dataset(tokenizer, eval_path)
+        for eval_path in eval_paths
     }
 
 print("Training set:", len(train_dataset))

@@ -188,7 +188,7 @@ trainer = RewardTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
-    eval_datasets=eval_datasets,
+    eval_dataset=eval_datasets,
     compute_metrics=compute_metrics,
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length

@@ -56,6 +56,10 @@ class ScriptArguments:
         default_factory=lambda: [
             "/mnt/data/yuhaoliu/datasets/rm_datasets/alignbench_general",
             "/mnt/data/yuhaoliu/datasets/rm_datasets/alignbench_reasoning",
+            "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_chat",
+            "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_chat-hard",
+            "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_safety",
+            "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_reasoning",
         ],
         metadata={"help": "The dir of the subset of the evaluation data to use"},
     )

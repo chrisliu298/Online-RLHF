@@ -125,7 +125,7 @@ tokenizer.model_max_length = script_args.max_length
 
 # Get the dataset
 train_path = script_args.train_set_path
-eval_paths = script_args.eval_set_path
+eval_paths = script_args.eval_set_paths
 if script_args.load_data_from_local:
     train_dataset = build_dataset_local(tokenizer, train_path)
     eval_datasets = {

@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 
 import torch
 from transformers import (
@@ -48,8 +48,15 @@ class ScriptArguments:
         default="preference_dataset_mixture2_and_safe_pku",
         metadata={"help": "The dir of the subset of the training data to use"},
     )
-    eval_set_path: Optional[str] = field(
-        default="preference_dataset_mixture2_and_safe_pku",
+    # eval_set_path: Optional[str] = field(
+    #     default="preference_dataset_mixture2_and_safe_pku",
+    #     metadata={"help": "The dir of the subset of the evaluation data to use"},
+    # )
+    eval_set_paths: Optional[List[str]] = field(
+        default_factory=lambda: [
+            "/mnt/data/yuhaoliu/datasets/rm_datasets/alignbench_general",
+            "/mnt/data/yuhaoliu/datasets/rm_datasets/alignbench_reasoning",
+        ],
         metadata={"help": "The dir of the subset of the evaluation data to use"},
     )
     output_dir: Optional[str] = field(
@@ -100,16 +107,10 @@ class ScriptArguments:
     )
     deepspeed: Optional[str] = field(
         default=None,
-        metadata={"help": "Use deepspeed for training. Provide the path to the deepspeed config."},
+        metadata={
+            "help": "Use deepspeed for training. Provide the path to the deepspeed config."
+        },
     )
-
-    def __post_init__(self):
-        if self.output_dir == "./bt_models":
-            if "/" in self.train_set_path:
-                train_set_path = self.train_set_path.split("/")[0]
-            else:
-                train_set_path = self.train_set_path
-            self.output_dir = f"./bt_models/{self.model_name}_{train_set_path}_{self.num_train_epochs}_{self.learning_rate}_{self.lr_scheduler_type}"
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -126,22 +127,31 @@ tokenizer.model_max_length = script_args.max_length
 
 # Get the dataset
 train_path = script_args.train_set_path
-eval_path = script_args.eval_set_path
-output_name = script_args.output_dir
+eval_paths = script_args.eval_set_path
 if script_args.load_data_from_local:
     train_dataset = build_dataset_local(
         tokenizer, train_path, script_args.skip_tokenization
     )
-    eval_dataset = build_dataset_local(tokenizer, eval_path, False)
+    # eval_dataset = build_dataset_local(tokenizer, eval_path, False)
+    eval_datasets = {
+        eval_path: build_dataset_local(tokenizer, eval_path, False)
+        for eval_path in eval_paths
+    }
 else:
     train_dataset = build_dataset(tokenizer, train_path)
-    eval_dataset = build_dataset(tokenizer, eval_path)
+    # eval_dataset = build_dataset(tokenizer, eval_path)
+    eval_datasets = {
+        eval_path: build_dataset(tokenizer, eval_path) for eval_path in eval_paths
+    }
+
 print("Training set:", len(train_dataset))
-print("Evaluation set:", len(eval_dataset))
+# print("Evaluation set:", len(eval_dataset))
+for eval_path, eval_dataset in eval_datasets.items():
+    print(f"Evaluation set {eval_path}:", len(eval_dataset))
 
 # Define the trainer
 training_args = TrainingArguments(
-    output_dir=output_name,
+    output_dir=script_args.output_dir,
     learning_rate=script_args.learning_rate,
     per_device_train_batch_size=script_args.per_device_train_batch_size,
     num_train_epochs=script_args.num_train_epochs,
@@ -183,12 +193,12 @@ trainer = RewardTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
-    eval_dataset=eval_dataset,
+    eval_datasets=eval_datasets,
     compute_metrics=compute_metrics,
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length
     ),
 )
 trainer.train()
-trainer.save_model(output_name)
-tokenizer.save_pretrained(output_name)
+trainer.save_model(script_args.output_dir)
+tokenizer.save_pretrained(script_args.output_dir)

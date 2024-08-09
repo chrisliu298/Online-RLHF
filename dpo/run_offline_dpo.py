@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import List, Optional
 
 import torch
 from datasets import load_from_disk
@@ -28,9 +28,16 @@ class ScriptArguments:
         default="train",
         metadata={"help": "the location of the dataset name or path"},
     )
-    eval_data_path: Optional[str] = field(
-        default=None,
-        metadata={"help": "the location of the eval dataset name or path"},
+    # eval_data_path: Optional[str] = field(
+    #     default=None,
+    #     metadata={"help": "the location of the eval dataset name or path"},
+    # )
+    eval_set_paths: Optional[List[str]] = field(
+        default_factory=lambda: [
+            "/mnt/data/yuhaoliu/datasets/dpo_datasets/alignbench_general",
+            "/mnt/data/yuhaoliu/datasets/dpo_datasets/alignbench_reasoning",
+        ],
+        metadata={"help": "The dir of the subset of the evaluation data to use"},
     )
     learning_rate: Optional[float] = field(
         default=5e-7, metadata={"help": "optimizer learning rate"}
@@ -167,9 +174,13 @@ if __name__ == "__main__":
         train_dataset = train_dataset.select(range(script_args.max_training_samples))
 
     # 3. Load evaluation dataset
-    eval_dataset = None
-    if script_args.eval_data_path:
-        eval_dataset = load_from_disk(script_args.eval_data_path)
+    # eval_dataset = None
+    # if script_args.eval_data_path:
+    #     eval_dataset = load_from_disk(script_args.eval_data_path)
+    eval_datasets = {
+        eval_path.split("/")[-1]: load_from_disk(eval_path)
+        for eval_path in script_args.eval_set_paths
+    }
 
     # 4. initialize training arguments:
     training_args = DPOConfigWithAdditionalArgs(
@@ -206,7 +217,7 @@ if __name__ == "__main__":
         model_ref,
         args=training_args,
         beta=script_args.beta,
-        eval_dataset=eval_dataset,
+        eval_dataset=eval_datasets,
         len_penalty=script_args.len_penalty,
         loss_type=script_args.loss_type,
         mask_prompt=script_args.mask_prompt,

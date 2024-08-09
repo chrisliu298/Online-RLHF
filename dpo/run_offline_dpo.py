@@ -133,7 +133,7 @@ if __name__ == "__main__":
     # 1. load a pretrained model
     model = AutoModelForCausalLM.from_pretrained(
         script_args.model_name_or_path,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.bfloat16,
         attn_implementation="flash_attention_2",
     )
     model.config.use_cache = False
@@ -204,7 +204,7 @@ if __name__ == "__main__":
         model_ref,
         args=training_args,
         beta=script_args.beta,
-        eval_dataset=eval_dataset,
+        eval_dataset=eval_datasets,
         len_penalty=script_args.len_penalty,
         loss_type=script_args.loss_type,
         mask_prompt=script_args.mask_prompt,

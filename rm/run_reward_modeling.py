@@ -134,14 +134,14 @@ if script_args.load_data_from_local:
     )
     # eval_dataset = build_dataset_local(tokenizer, eval_path, False)
     eval_datasets = {
-        eval_path: build_dataset_local(tokenizer, eval_path, False)
+        eval_path.split("/")[-1]: build_dataset_local(tokenizer, eval_path, False)
         for eval_path in eval_paths
     }
 else:
     train_dataset = build_dataset(tokenizer, train_path)
     # eval_dataset = build_dataset(tokenizer, eval_path)
     eval_datasets = {
-        eval_path: build_dataset(tokenizer, eval_path) for eval_path in eval_paths
+        eval_path.split("/")[-1]: build_dataset(tokenizer, eval_path) for eval_path in eval_paths
     }
 
 print("Training set:", len(train_dataset))

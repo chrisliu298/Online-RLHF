@@ -204,7 +204,7 @@ if __name__ == "__main__":
         model_ref,
         args=training_args,
         beta=script_args.beta,
-        eval_dataset=eval_datasets,
+        eval_dataset=eval_dataset,
         len_penalty=script_args.len_penalty,
         loss_type=script_args.loss_type,
         mask_prompt=script_args.mask_prompt,

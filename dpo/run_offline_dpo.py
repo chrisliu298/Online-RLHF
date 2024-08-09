@@ -121,6 +121,9 @@ class ScriptArguments:
         default=None,
         metadata={"help": "the deepspeed configuration file"},
     )
+    apply_chat_template: Optional[bool] = field(
+        default=False, metadata={"help": "apply chat template"}
+    )
 
 
 if __name__ == "__main__":
@@ -211,6 +214,7 @@ if __name__ == "__main__":
         max_prompt_length=script_args.max_prompt_length,
         tokenizer=tokenizer,
         train_dataset=train_dataset,
+        apply_chat_template=script_args.apply_chat_template,
     )
     print("begin to train")
 

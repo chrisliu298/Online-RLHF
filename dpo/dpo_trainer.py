@@ -32,6 +32,7 @@ class PreferenceDataCollatorWithPadding:
     is_encoder_decoder: Optional[bool] = False
     max_target_length: Optional[int] = None
     mask_prompt: Optional[bool] = False
+    apply_chat_template: bool = True
 
     def tokenize_batch_element(
         self,
@@ -50,11 +51,12 @@ class PreferenceDataCollatorWithPadding:
             label_pad_token_id  for the prompt tokens.
         """
         batch = {}
-        prompt = self.tokenizer.apply_chat_template(
-            [{"role": "user", "content": prompt}],
-            tokenize=False,
-            add_generation_prompt=True,
-        )
+        if self.apply_chat_template:
+            prompt = self.tokenizer.apply_chat_template(
+                [{"role": "user", "content": prompt}],
+                tokenize=False,
+                add_generation_prompt=True,
+            )
 
         if not self.is_encoder_decoder:
             chosen_tokens = self.tokenizer(chosen, add_special_tokens=False)
@@ -286,6 +288,7 @@ class PreferenceTrainer(DPOTrainer):
         compute_metrics: Optional[Callable[[EvalLoopOutput], Dict]] = None,
         mask_prompt: Optional[bool] = False,
         len_penalty: float = 0,
+        apply_chat_template: bool = True,
     ):
 
         if data_collator is None:
@@ -299,6 +302,7 @@ class PreferenceTrainer(DPOTrainer):
                 is_encoder_decoder=False,
                 max_target_length=max_target_length,
                 mask_prompt=mask_prompt,
+                apply_chat_template=apply_chat_template,
             )
         super().__init__(
             model=model,

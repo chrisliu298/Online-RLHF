@@ -107,7 +107,7 @@ class ScriptArguments:
     add_padding_token: Optional[bool] = field(
         default=False, metadata={"help": "Add padding token"}
     )
-    sparse_config: Optional[str] = field(
+    sparse_rm_config: Optional[str] = field(
         default=None,
         metadata={"help": "The sparse config file"},
     )
@@ -173,7 +173,7 @@ training_args = TrainingArguments(
     eval_steps=script_args.eval_steps,
     run_name=script_args.run_name,
 )
-if script_args.sparse_config is not None:
+if script_args.sparse_rm_config is not None:
     assert (
         "qwen2" in script_args.model_name.lower()
     ), "Sparse features are only supported for Qwen2 models."
@@ -182,7 +182,7 @@ if script_args.sparse_config is not None:
         num_labels=1,
         torch_dtype=torch.bfloat16,
         attn_implementation="flash_attention_2",
-        config=script_args.sparse_config,
+        config=script_args.sparse_rm_config,
     )
 else:
     model = AutoModelForSequenceClassification.from_pretrained(

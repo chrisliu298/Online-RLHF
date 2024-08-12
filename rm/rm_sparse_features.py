@@ -129,13 +129,10 @@ class Qwen2ForSequenceClassificationWithSparseFeatures(Qwen2PreTrainedModel):
             output = (pooled_logits,) + transformer_outputs[1:]
             return ((loss,) + output) if loss is not None else output
 
-        return (
-            SequenceClassifierOutputWithPast(
-                loss=loss,
-                logits=pooled_logits,
-                past_key_values=transformer_outputs.past_key_values,
-                hidden_states=transformer_outputs.hidden_states,
-                attentions=transformer_outputs.attentions,
-            ),
-            top_k_features,
+        return SequenceClassifierOutputWithPast(
+            loss=loss,
+            logits=pooled_logits,
+            past_key_values=transformer_outputs.past_key_values,
+            hidden_states=transformer_outputs.hidden_states,
+            attentions=transformer_outputs.attentions,
         )

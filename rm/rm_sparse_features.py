@@ -89,8 +89,6 @@ class Qwen2ForSequenceClassificationWithSparseFeatures(Qwen2PreTrainedModel):
             torch.arange(batch_size, device=hidden_states.device), sequence_lengths
         ]
         sparse_features = self.sparse_encoder(pooled_hidden_states)
-        print(f"pooled_hidden_states.shape: {pooled_hidden_states.shape}")
-        print(f"sparse_features.shape: {sparse_features.shape}")
 
         # Obtain the top-k features in the 1st dimension
         top_k_features, _ = torch.topk(sparse_features, self.config.K, dim=1)

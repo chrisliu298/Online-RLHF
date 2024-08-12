@@ -66,7 +66,10 @@ class ScriptArguments:
         default="context_messages",
         metadata={"help": "the key of the dataset"},
     )
-    eos_ids: List[int] = field(default_factory=lambda: [], metadata={"help": "the ids of the end of sentence tokens"})
+    eos_ids: List[int] = field(
+        default_factory=lambda: [],
+        metadata={"help": "the ids of the end of sentence tokens"},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -95,22 +98,34 @@ sampling_params = SamplingParams(
     max_tokens=script_args.max_new_tokens,
     n=script_args.K,
     stop_token_ids=[tokenizer.eos_token_id] + script_args.eos_ids,
-    #stop=["<|user|>"],
+    # stop=["<|user|>"],
 )
 
 
 ds = load_dataset(script_args.dataset_name_or_path, split="train")
 ds = ds.map(
     lambda x: {
-        "prompt": tokenizer.apply_chat_template(x[script_args.dataset_key], tokenize=False, add_generation_prompt=True)
+        "prompt": tokenizer.apply_chat_template(
+            x[script_args.dataset_key], tokenize=False, add_generation_prompt=True
+        )
     }
 )
 
 data_size = len(ds["prompt"])
 one_num_share = int(data_size / script_args.my_world_size)
-ds = ds.select(np.arange(script_args.local_index * one_num_share, (script_args.local_index + 1) * one_num_share))
+ds = ds.select(
+    np.arange(
+        script_args.local_index * one_num_share,
+        (script_args.local_index + 1) * one_num_share,
+    )
+)
 
-print([script_args.local_index * one_num_share, (script_args.local_index + 1) * one_num_share])
+print(
+    [
+        script_args.local_index * one_num_share,
+        (script_args.local_index + 1) * one_num_share,
+    ]
+)
 print(ds, script_args.dataset_name_or_path)
 print(ds[0])
 
@@ -133,5 +148,9 @@ output_eval_dataset["instances"] = gathered_data
 print("I collect ", len(gathered_data), "samples")
 
 
-with open(script_args.output_dir + str(script_args.local_index) + ".json", "w", encoding="utf8") as f:
+with open(
+    script_args.output_dir + str(script_args.local_index) + ".json",
+    "w",
+    encoding="utf8",
+) as f:
     json.dump(output_eval_dataset, f, ensure_ascii=False)

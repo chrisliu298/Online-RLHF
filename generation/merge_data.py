@@ -34,7 +34,9 @@ parser = HfArgumentParser(ScriptArguments)
 script_args = parser.parse_args_into_dataclasses()[0]
 
 
-all_dirs = [script_args.base_path + str(i) + ".json" for i in range(script_args.num_datasets)]
+all_dirs = [
+    script_args.base_path + str(i) + ".json" for i in range(script_args.num_datasets)
+]
 
 gathered_data = []
 for my_dir in all_dirs:

@@ -107,9 +107,6 @@ class ScriptArguments:
     add_padding_token: Optional[bool] = field(
         default=False, metadata={"help": "Add padding token"}
     )
-    sparse_features: Optional[bool] = field(
-        default=False, metadata={"help": "Use sparse features"}
-    )
     sparse_config: Optional[str] = field(
         default=None,
         metadata={"help": "The sparse config file"},
@@ -176,11 +173,10 @@ training_args = TrainingArguments(
     eval_steps=script_args.eval_steps,
     run_name=script_args.run_name,
 )
-if script_args.sparse_features:
+if script_args.sparse_config is not None:
     assert (
         "qwen2" in script_args.model_name.lower()
     ), "Sparse features are only supported for Qwen2 models."
-    assert script_args.sparse_config is not None, "Sparse config file is required."
     model = Qwen2ForSequenceClassificationWithSparseFeatures.from_pretrained(
         script_args.model_name,
         num_labels=1,

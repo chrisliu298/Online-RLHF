@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 import torch
+from rm_sparse_features import Qwen2ForSequenceClassificationWithSparseFeatures
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -106,12 +107,12 @@ class ScriptArguments:
     add_padding_token: Optional[bool] = field(
         default=False, metadata={"help": "Add padding token"}
     )
-
-    deepspeed: Optional[str] = field(
+    sparse_features: Optional[bool] = field(
+        default=False, metadata={"help": "Use sparse features"}
+    )
+    sparse_config: Optional[str] = field(
         default=None,
-        metadata={
-            "help": "Use deepspeed for training. Provide the path to the deepspeed config."
-        },
+        metadata={"help": "The sparse config file"},
     )
 
 
@@ -174,15 +175,26 @@ training_args = TrainingArguments(
     per_device_eval_batch_size=script_args.per_device_eval_batch_size,
     eval_steps=script_args.eval_steps,
     run_name=script_args.run_name,
-    deepspeed=script_args.deepspeed,
 )
-
-model = AutoModelForSequenceClassification.from_pretrained(
-    script_args.model_name,
-    num_labels=1,
-    torch_dtype=torch.bfloat16,
-    attn_implementation="flash_attention_2",
-)
+if script_args.sparse_features:
+    assert (
+        "qwen2" in script_args.model_name.lower()
+    ), "Sparse features are only supported for Qwen2 models."
+    assert script_args.sparse_config is not None, "Sparse config file is required."
+    model = Qwen2ForSequenceClassificationWithSparseFeatures.from_pretrained(
+        script_args.model_name,
+        num_labels=1,
+        torch_dtype=torch.bfloat16,
+        attn_implementation="flash_attention_2",
+        config=script_args.sparse_config,
+    )
+else:
+    model = AutoModelForSequenceClassification.from_pretrained(
+        script_args.model_name,
+        num_labels=1,
+        torch_dtype=torch.bfloat16,
+        attn_implementation="flash_attention_2",
+    )
 model.config.use_cache = not script_args.gradient_checkpointing
 if script_args.add_padding_token:
     model.config.pad_token_id = tokenizer.pad_token_id

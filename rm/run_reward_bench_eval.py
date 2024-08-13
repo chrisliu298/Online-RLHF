@@ -92,7 +92,11 @@ def change_of_format(prompt, resp):
     #         rm_tokenizer.bos_token, ""
     #     )
     # except:
-    return rm_tokenizer.apply_chat_template(message, tokenize=False)
+    formatted = rm_tokenizer.apply_chat_template(message, tokenize=False)
+    try:
+        return formatted.replace(rm_tokenizer.bos_token, "")
+    except:
+        return formatted
 
 
 def get_reward(test_texts):

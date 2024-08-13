@@ -70,7 +70,7 @@ rm_pipe = AutoModelForSequenceClassification.from_pretrained(
     num_labels=1,
 )
 # Print the model in pipeline
-print(rm_pipe)
+# print(rm_pipe)
 pipe_kwargs = {
     "return_all_scores": True,
     "function_to_apply": "none",

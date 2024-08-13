@@ -297,7 +297,7 @@ if accelerator.is_main_process:
     row = {"attribute": attribute, **scores_per_section}
     df_final = df_final._append(row, ignore_index=True)
     print("model:", script_args.reward_name_or_path)
-    with open(output_path, "a") as f:
+    with open(output_path, "w") as f:
         f.write(df_acc.to_string() + "\n")
         f.write(script_args.reward_name_or_path + "\n")
         scores = []

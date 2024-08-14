@@ -232,7 +232,7 @@ if __name__ == "__main__":
     # 1. load a pretrained model
     model = AutoModelForCausalLM.from_pretrained(
         script_args.model_name_or_path,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.bfloat16,
         attn_implementation="flash_attention_2",
     )
     model.config.use_cache = False

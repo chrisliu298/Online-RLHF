@@ -327,6 +327,7 @@ if __name__ == "__main__":
         max_prompt_length=script_args.max_prompt_length,
         tokenizer=tokenizer,
         train_dataset=train_dataset,
+        apply_chat_template=True,
     )
     print("begin to train")
 

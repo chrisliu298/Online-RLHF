@@ -259,7 +259,14 @@ class PreferenceTrainer(DPOTrainer):
         ref_model: Optional[Union[PreTrainedModel, nn.Module]] = None,
         beta: float = 0.1,
         loss_type: Literal[
-            "sigmoid", "hinge", "cross_entropy", "kl", "rev_kl", "raft"
+            "sigmoid",
+            "hinge",
+            "cross_entropy",
+            "kl",
+            "rev_kl",
+            "raft",
+            "apo_zero",
+            "apo_down",
         ] = "rev_kl",
         args: TrainingArguments = None,
         data_collator: Optional[DataCollator] = None,
@@ -368,6 +375,20 @@ class PreferenceTrainer(DPOTrainer):
         if self.loss_type == "sigmoid":
             logits = pi_logratios - ref_logratios
             losses = -F.logsigmoid(self.beta * logits)
+        elif self.loss_type == "apo_zero":
+            logits = pi_logratios - ref_logratios
+            chosen_logps = self.beta * (policy_chosen_logps - reference_chosen_logps)
+            rejected_logps = self.beta * (
+                policy_rejected_logps - reference_rejected_logps
+            )
+            losses = -F.sigmoid(chosen_logps) + F.sigmoid(rejected_logps)
+        elif self.loss_type == "apo_down":
+            logits = pi_logratios - ref_logratios
+            chosen_logps = self.beta * (policy_chosen_logps - reference_chosen_logps)
+            rejected_logps = self.beta * (
+                policy_rejected_logps - reference_rejected_logps
+            )
+            losses = F.sigmoid(chosen_logps) - F.sigmoid(chosen_logps - rejected_logps)
         elif self.loss_type == "hinge":
             logits = pi_logratios - ref_logratios
             losses = torch.relu(1 - self.beta * logits)

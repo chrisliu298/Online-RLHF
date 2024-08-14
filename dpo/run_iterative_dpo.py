@@ -310,6 +310,7 @@ if __name__ == "__main__":
         reward_model_name=script_args.reward_model_name,
         len_penalty=script_args.len_penalty,
         use_prev_iter_as_ref=script_args.use_prev_iter_as_ref,
+        loss_type=script_args.loss_type,
     )
     print(training_args)
 

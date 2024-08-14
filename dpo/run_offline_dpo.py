@@ -195,6 +195,7 @@ if __name__ == "__main__":
         save_strategy=script_args.save_strategy,
         warmup_ratio=script_args.warmup_ratio,
         deepspeed=script_args.deepspeed,
+        loss_type=script_args.loss_type,
     )
     print(training_args)
 

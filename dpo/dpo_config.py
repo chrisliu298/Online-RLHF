@@ -11,3 +11,4 @@ class DPOConfigWithAdditionalArgs(DPOConfig):
     len_penalty: float = 0.0
     use_prev_iter_as_ref: str = "false"
     reward_model_name: str = None
+    loss_type: str = "sigmoid"

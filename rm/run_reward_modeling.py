@@ -111,6 +111,14 @@ class ScriptArguments:
         default=None,
         metadata={"help": "The sparse config file"},
     )
+    tokenize_train: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Tokenize the training data"},
+    )
+    tokenize_eval: Optional[bool] = field(
+        default=True,
+        metadata={"help": "Tokenize the evaluation data"},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -129,9 +137,13 @@ tokenizer.model_max_length = script_args.max_length
 train_path = script_args.train_set_path
 eval_paths = script_args.eval_set_paths
 if script_args.load_data_from_local:
-    train_dataset = build_dataset_local(tokenizer, train_path)
+    train_dataset = build_dataset_local(
+        tokenizer, train_path, tokenize=script_args.tokenize_train
+    )
     eval_datasets = {
-        eval_path.split("/")[-1]: build_dataset_local(tokenizer, eval_path)
+        eval_path.split("/")[-1]: build_dataset_local(
+            tokenizer, eval_path, tokenize=script_args.tokenize_eval
+        )
         for eval_path in eval_paths
     }
 else:

@@ -37,7 +37,7 @@ def build_dataset(tokenizer, train_path):
 
 def build_dataset_local(tokenizer, train_path, tokenize=True):
 
-    def tokenize(sample):
+    def tokenize_func(sample):
         sample["positive"] = tokenizer.apply_chat_template(
             sample["chosen"], tokenize=False, add_generation_prompt=False
         )
@@ -58,7 +58,7 @@ def build_dataset_local(tokenizer, train_path, tokenize=True):
     dataset = load_from_disk(train_path).shuffle(seed=42)
     if not tokenize:
         return dataset
-    dataset = dataset.map(tokenize, num_proc=8)
+    dataset = dataset.map(tokenize_func, num_proc=8)
     return dataset
 
 

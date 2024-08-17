@@ -206,7 +206,11 @@ else:
 model.config.use_cache = not script_args.gradient_checkpointing
 if script_args.add_padding_token:
     model.config.pad_token_id = tokenizer.pad_token_id
-    # model.resize_token_embeddings(len(tokenizer))
+    if script_args.model_name in {
+        "Meta-Llama-3-8B-Instruct",
+        "Meta-Llama-3.1-8B-Instruct",
+    }:
+        model.resize_token_embeddings(len(tokenizer))
 
 trainer = RewardTrainer(
     model=model,

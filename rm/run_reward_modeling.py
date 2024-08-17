@@ -116,7 +116,7 @@ class ScriptArguments:
         metadata={"help": "Tokenize the training data"},
     )
     tokenize_eval: Optional[bool] = field(
-        default=True,
+        default=False,
         metadata={"help": "Tokenize the evaluation data"},
     )
 

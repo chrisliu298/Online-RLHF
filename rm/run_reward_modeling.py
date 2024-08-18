@@ -74,7 +74,7 @@ class ScriptArguments:
         default="paged_adamw_32bit", metadata={"help": "The optimizer to use."}
     )
     lr_scheduler_type: Optional[str] = field(
-        default="cosine_with_min_lr", metadata={"help": "The lr scheduler"}
+        default="cosine", metadata={"help": "The lr scheduler"}
     )
     warmup_ratio: Optional[float] = field(
         default=0.0, metadata={"help": "The warmup ratio"}
@@ -100,9 +100,6 @@ class ScriptArguments:
     )
     logging_steps: Optional[int] = field(
         default=1, metadata={"help": "The logging steps"}
-    )
-    min_lr: Optional[float] = field(
-        default=0.0, metadata={"help": "The minimum learning rate"}
     )
     add_padding_token: Optional[bool] = field(
         default=False, metadata={"help": "Add padding token"}
@@ -176,7 +173,6 @@ training_args = TrainingArguments(
     logging_steps=script_args.logging_steps,
     optim=script_args.optim,
     lr_scheduler_type=script_args.lr_scheduler_type,
-    lr_scheduler_kwargs={"min_lr": script_args.min_lr},
     warmup_ratio=script_args.warmup_ratio,
     warmup_steps=script_args.warmup_steps,
     report_to="wandb",

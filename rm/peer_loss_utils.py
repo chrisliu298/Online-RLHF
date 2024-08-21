@@ -129,7 +129,10 @@ class RewardTrainer(Trainer):
             }
 
         # Log the rewards
-        self.log("rewards/chosen", rewards_j.mean().item())
-        self.log("rewards/rejected", rewards_k.mean().item())
-        self.log("rewards/alt", rewards_l.mean().item())
+        # self.log("rewards/chosen", rewards_j.mean().item())
+        # self.log("rewards/rejected", rewards_k.mean().item())
+        # self.log("rewards/alt", rewards_l.mean().item())
+        self.log({"rewards/chosen": rewards_j.mean().item()})
+        self.log({"rewards/rejected": rewards_k.mean().item()})
+        self.log({"rewards/alt": rewards_l.mean().item()})
         return loss

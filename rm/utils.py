@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
@@ -11,7 +10,6 @@ from transformers.utils import PaddingStrategy
 
 
 def build_dataset(tokenizer, train_path):
-
     def tokenize(sample):
         sample["positive"] = tokenizer.apply_chat_template(
             sample["chosen"], tokenize=False, add_generation_prompt=False
@@ -36,7 +34,6 @@ def build_dataset(tokenizer, train_path):
 
 
 def build_dataset_local(tokenizer, train_path, tokenize=True):
-
     def tokenize_func(sample):
         sample["positive"] = tokenizer.apply_chat_template(
             sample["chosen"], tokenize=False, add_generation_prompt=False

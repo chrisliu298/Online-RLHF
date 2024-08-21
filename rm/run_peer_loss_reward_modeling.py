@@ -118,6 +118,9 @@ class ScriptArguments:
     peer_loss_lambda: Optional[float] = field(
         default=0.1, metadata={"help": "The weight of the peer loss"}
     )
+    do_not_eval: Optional[bool] = field(
+        default=False, metadata={"help": "Do not evaluate the model"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -144,14 +147,14 @@ if script_args.load_data_from_local:
             tokenizer, eval_path, tokenize=script_args.tokenize_eval
         )
         for eval_path in eval_paths
-    }
+    } if not script_args.do_not_eval else None
 else:
     raise NotImplementedError("Only local data loading is supported.")
 
 print("Training set:", len(train_dataset))
-# print("Evaluation set:", len(eval_dataset))
-for eval_path, eval_dataset in eval_datasets.items():
-    print(f"Evaluation set {eval_path}:", len(eval_dataset))
+if script_args.do_not_eval:
+    for eval_path, eval_dataset in eval_datasets.items():
+        print(f"Evaluation set {eval_path}:", len(eval_dataset))
 
 # Define the trainer
 training_args = TrainingArguments(

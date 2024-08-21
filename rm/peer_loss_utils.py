@@ -17,18 +17,18 @@ def build_dataset_local(tokenizer, train_path, tokenize=True):
         sample["negative"] = tokenizer.apply_chat_template(
             sample["rejected"], tokenize=False, add_generation_prompt=False
         )
-        sample["alt_negative"] = tokenizer.apply_chat_template(
-            sample["alt_rejected"], tokenize=False, add_generation_prompt=False
+        sample["alt"] = tokenizer.apply_chat_template(
+            sample["alt"], tokenize=False, add_generation_prompt=False
         )
         if tokenizer.bos_token is not None:
             sample["positive"] = sample["positive"].replace(tokenizer.bos_token, "")
             sample["negative"] = sample["negative"].replace(tokenizer.bos_token, "")
-            sample["alt_negative"] = sample["alt_negative"].replace(
+            sample["alt"] = sample["alt"].replace(
                 tokenizer.bos_token, ""
             )
         tokenized_pos = tokenizer(sample["positive"], truncation=True)
         tokenized_neg = tokenizer(sample["negative"], truncation=True)
-        tokenized_alt_neg = tokenizer(sample["alt_negative"], truncation=True)
+        tokenized_alt_neg = tokenizer(sample["alt"], truncation=True)
         sample["input_ids_j"] = tokenized_pos["input_ids"]
         sample["attention_mask_j"] = tokenized_pos["attention_mask"]
         sample["input_ids_k"] = tokenized_neg["input_ids"]
@@ -131,5 +131,5 @@ class RewardTrainer(Trainer):
         # Log the rewards
         self.log("rewards/chosen", rewards_j.mean().item())
         self.log("rewards/rejected", rewards_k.mean().item())
-        self.log("rewards/alt_rejected", rewards_l.mean().item())
+        self.log("rewards/alt", rewards_l.mean().item())
         return loss

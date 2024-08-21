@@ -142,17 +142,21 @@ if script_args.load_data_from_local:
     train_dataset = build_dataset_local(
         tokenizer, train_path, tokenize=script_args.tokenize_train
     )
-    eval_datasets = {
-        eval_path.split("/")[-1]: build_dataset_local(
-            tokenizer, eval_path, tokenize=script_args.tokenize_eval
-        )
-        for eval_path in eval_paths
-    } if not script_args.do_not_eval else None
+    eval_datasets = (
+        {
+            eval_path.split("/")[-1]: build_dataset_local(
+                tokenizer, eval_path, tokenize=script_args.tokenize_eval
+            )
+            for eval_path in eval_paths
+        }
+        if not script_args.do_not_eval
+        else None
+    )
 else:
     raise NotImplementedError("Only local data loading is supported.")
 
 print("Training set:", len(train_dataset))
-if script_args.do_not_eval:
+if not script_args.do_not_eval:
     for eval_path, eval_dataset in eval_datasets.items():
         print(f"Evaluation set {eval_path}:", len(eval_dataset))
 

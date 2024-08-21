@@ -127,4 +127,9 @@ class RewardTrainer(Trainer):
                 "rewards_k": rewards_k,
                 "rewards_l": rewards_l,
             }
+
+        # Log the rewards
+        self.log("rewards/chosen", rewards_j.mean().item())
+        self.log("rewards/rejected", rewards_k.mean().item())
+        self.log("rewards/alt_rejected", rewards_l.mean().item())
         return loss

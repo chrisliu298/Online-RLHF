@@ -109,7 +109,19 @@ def compute_metrics(eval_pred):
     return result
 
 
+def t_log(x, t):
+    return (x ** (1 - t) - 1) / (1 - t)
+
+
+def t_log_sigmoid(x, t):
+    return t_log(torch.sigmoid(x), t)
+
+
 class RewardTrainer(Trainer):
+    def __init__(self, t=1.0, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.t = t
+
     def compute_loss(self, model, inputs, return_outputs=False):
         rewards = model(
             input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
@@ -119,7 +131,10 @@ class RewardTrainer(Trainer):
         kidx = jidx + 1
         rewards_j = rewards[jidx]
         rewards_k = rewards[kidx]
-        loss = -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
+        if self.t == 1.0:
+            loss = -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
+        else:
+            loss = -t_log_sigmoid(rewards_j - rewards_k, self.t).mean()
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}
 

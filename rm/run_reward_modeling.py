@@ -118,6 +118,9 @@ class ScriptArguments:
     do_not_eval: Optional[bool] = field(
         default=False, metadata={"help": "Do not evaluate the model"}
     )
+    log_t: Optional[float] = field(
+        default=1.0, metadata={"help": "The temperature for the t-logarithm"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -219,6 +222,7 @@ trainer = RewardTrainer(
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length
     ),
+    t=script_args.log_t,
 )
 trainer.train()
 trainer.save_model(script_args.output_dir)

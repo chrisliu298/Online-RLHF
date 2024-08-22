@@ -122,4 +122,8 @@ class RewardTrainer(Trainer):
         loss = -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}
+
+        self.log({"rewards/chosen": rewards_j.mean().item()})
+        self.log({"rewards/rejected": rewards_k.mean().item()})
+
         return loss

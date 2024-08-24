@@ -142,7 +142,7 @@ class RewardTrainer(Trainer):
         elif self.loss_type == "focal":
             loss = (
                 -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
-                * (1 - torch.sigmoid(rewards_j - rewards_k)) ** self.gamma
+                * (1 - torch.sigmoid(rewards_j - rewards_k)).mean() ** self.gamma
             )
 
         if return_outputs:

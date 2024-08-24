@@ -118,8 +118,12 @@ class ScriptArguments:
     do_not_eval: Optional[bool] = field(
         default=False, metadata={"help": "Do not evaluate the model"}
     )
+    loss_type: Optional[str] = field(default="bt", metadata={"help": "The loss type"})
     log_t: Optional[float] = field(
         default=1.0, metadata={"help": "The temperature for the t-logarithm"}
+    )
+    gamma: Optional[float] = field(
+        default=0.0, metadata={"help": "The gamma for the t-logarithm"}
     )
 
 
@@ -222,7 +226,8 @@ trainer = RewardTrainer(
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length
     ),
-    t=script_args.log_t,
+    log_t=script_args.log_t,
+    gamma=script_args.gamma,
 )
 trainer.train()
 trainer.save_model(script_args.output_dir)

@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 import torch
-from rm_sparse_features import Qwen2ForSequenceClassificationWithSparseFeatures
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -103,10 +102,6 @@ class ScriptArguments:
     add_padding_token: Optional[bool] = field(
         default=False, metadata={"help": "Add padding token"}
     )
-    sparse_rm_config: Optional[str] = field(
-        default=None,
-        metadata={"help": "The sparse config file"},
-    )
     tokenize_train: Optional[bool] = field(
         default=False,
         metadata={"help": "Tokenize the training data"},
@@ -190,24 +185,12 @@ training_args = TrainingArguments(
     eval_steps=script_args.eval_steps,
     run_name=script_args.run_name,
 )
-if script_args.sparse_rm_config is not None:
-    assert (
-        "qwen2" in script_args.model_name.lower()
-    ), "Sparse features are only supported for Qwen2 models."
-    model = Qwen2ForSequenceClassificationWithSparseFeatures.from_pretrained(
-        script_args.model_name,
-        num_labels=1,
-        torch_dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2",
-        config=script_args.sparse_rm_config,
-    )
-else:
-    model = AutoModelForSequenceClassification.from_pretrained(
-        script_args.model_name,
-        num_labels=1,
-        torch_dtype=torch.bfloat16,
-        attn_implementation="flash_attention_2",
-    )
+model = AutoModelForSequenceClassification.from_pretrained(
+    script_args.model_name,
+    num_labels=1,
+    torch_dtype=torch.bfloat16,
+    attn_implementation="flash_attention_2",
+)
 model.config.use_cache = not script_args.gradient_checkpointing
 if script_args.add_padding_token:
     model.config.pad_token_id = tokenizer.pad_token_id
@@ -226,6 +209,7 @@ trainer = RewardTrainer(
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length
     ),
+    loss_type=script_args.loss_type,
     log_t=script_args.log_t,
     gamma=script_args.gamma,
 )

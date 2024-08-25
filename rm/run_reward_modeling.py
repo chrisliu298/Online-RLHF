@@ -118,6 +118,9 @@ class ScriptArguments:
     gamma: Optional[float] = field(
         default=0.0, metadata={"help": "The gamma for the t-logarithm"}
     )
+    margin: Optional[float] = field(
+        default=0.0, metadata={"help": "The margin for the hinge loss"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -210,6 +213,7 @@ trainer = RewardTrainer(
     loss_type=script_args.loss_type,
     log_t=script_args.log_t,
     gamma=script_args.gamma,
+    margin=script_args.margin,
 )
 trainer.train()
 trainer.save_model(script_args.output_dir)

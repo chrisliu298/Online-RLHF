@@ -118,12 +118,20 @@ def t_log_sigmoid(x, t):
 
 
 class RewardTrainer(Trainer):
-    def __init__(self, loss_type="bt", log_t=1.0, gamma=0.0, *args, **kwargs):
+    def __init__(
+        self, loss_type="bt", log_t=1.0, gamma=0.0, margin=1.0, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
-        assert loss_type in {"bt", "t_log", "focal"}, f"Invalid loss type: {loss_type}"
+        assert loss_type in {
+            "bt",
+            "t_log",
+            "focal",
+            "hinge",
+        }, f"Invalid loss type: {loss_type}"
         self.loss_type = loss_type
         self.log_t = log_t
         self.gamma = gamma
+        self.margin = margin
 
     def compute_loss(self, model, inputs, return_outputs=False):
         rewards = model(
@@ -144,6 +152,8 @@ class RewardTrainer(Trainer):
                 -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
                 * (1 - torch.sigmoid(rewards_j - rewards_k)).mean() ** self.gamma
             )
+        elif self.loss_type == "hinge":
+            loss = torch.relu(self.margin - (rewards_j - rewards_k)).mean()
 
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}

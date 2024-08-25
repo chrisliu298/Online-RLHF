@@ -127,6 +127,9 @@ class RewardTrainer(Trainer):
             "t_log",
             "focal",
             "hinge",
+            "margin_mse",
+            "backward_ce",
+            "forward_ce",
         }, f"Invalid loss type: {loss_type}"
         self.loss_type = loss_type
         self.log_t = log_t
@@ -154,6 +157,18 @@ class RewardTrainer(Trainer):
             )
         elif self.loss_type == "hinge":
             loss = torch.relu(self.margin - (rewards_j - rewards_k)).mean()
+        elif self.loss_type == "margin_mse":
+            loss = nn.functional.mse_loss(rewards_j, rewards_k + self.margin)
+        elif self.loss_type == "backward_ce":
+            logits = rewards_j - rewards_k
+            loss = nn.functional.binary_cross_entropy_with_logits(
+                logits, torch.ones_like(logits)
+            )
+        elif self.loss_type == "forward_ce":
+            logits = rewards_j - rewards_k
+            loss = nn.functional.binary_cross_entropy_with_logits(
+                logits, torch.zeros_like(logits)
+            )
 
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}

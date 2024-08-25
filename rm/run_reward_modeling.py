@@ -53,8 +53,6 @@ class ScriptArguments:
     # )
     eval_set_paths: Optional[List[str]] = field(
         default_factory=lambda: [
-            "/mnt/data/yuhaoliu/datasets/rm_datasets/alignbench_general",
-            "/mnt/data/yuhaoliu/datasets/rm_datasets/alignbench_reasoning",
             "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_chat",
             "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_chat-hard",
             "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_safety",

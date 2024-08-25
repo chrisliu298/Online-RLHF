@@ -130,6 +130,7 @@ class RewardTrainer(Trainer):
             "margin_mse",
             "backward_ce",
             "forward_ce",
+            "ce",
         }, f"Invalid loss type: {loss_type}"
         self.loss_type = loss_type
         self.log_t = log_t
@@ -169,6 +170,12 @@ class RewardTrainer(Trainer):
             loss = nn.functional.binary_cross_entropy_with_logits(
                 logits, torch.zeros_like(logits)
             )
+        elif self.loss_type == "ce":
+            labels_j = torch.ones_like(rewards_j)
+            labels_k = torch.zeros_like(rewards_k)
+            logits = torch.cat([rewards_j, rewards_k], dim=0)
+            labels = torch.cat([labels_j, labels_k], dim=0)
+            loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
 
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}

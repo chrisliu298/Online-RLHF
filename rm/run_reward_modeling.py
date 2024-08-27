@@ -166,14 +166,26 @@ resume_from_checkpoint = None
 if script_args.checkpoint_dir:
     checkpoint_dir = script_args.checkpoint_dir
     if os.path.exists(checkpoint_dir):
-        # Note that here I assume there is only one `checkpoint-*` folder in the
-        # checkpoint_dir because I set `save_total_limit=1` in the training arguments.
-        # If you saved multiple checkpoints, you must modify this part to
-        # find the correct (latest) checkpoint.
-        checkpoint = os.path.join(checkpoint_dir, os.listdir(checkpoint_dir)[0])
-        if os.path.isdir(checkpoint):
-            resume_from_checkpoint = checkpoint
-            print(f"Resuming training from checkpoint: {resume_from_checkpoint}")
+        checkpoints = [
+            d for d in os.listdir(checkpoint_dir) if d.startswith("checkpoint-")
+        ]
+        if checkpoints:
+            # Sort checkpoints by their step number
+            checkpoints.sort(key=lambda x: int(x.split("-")[1]))
+            # Use the earliest checkpoint
+            earliest_checkpoint = os.path.join(checkpoint_dir, checkpoints[0])
+            if os.path.isdir(earliest_checkpoint):
+                resume_from_checkpoint = earliest_checkpoint
+                print(f"Resuming training from checkpoint: {resume_from_checkpoint}")
+
+                # Remove all later checkpoints
+                for checkpoint in checkpoints[1:]:
+                    checkpoint_path = os.path.join(checkpoint_dir, checkpoint)
+                    if os.path.isdir(checkpoint_path):
+                        import shutil
+
+                        shutil.rmtree(checkpoint_path)
+                        print(f"Removed later checkpoint: {checkpoint_path}")
 
 # Define the trainer
 training_args = TrainingArguments(

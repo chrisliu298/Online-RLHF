@@ -76,7 +76,7 @@ class ScriptArguments:
         default=0, metadata={"help": "The warmup steps"}
     )
     max_length: Optional[int] = field(default=4096)
-    save_every_steps: Optional[int] = field(
+    save_steps: Optional[int] = field(
         default=999999, metadata={"help": "Save the model every x steps"}
     )
     load_data_from_local: Optional[bool] = field(
@@ -164,7 +164,7 @@ if not script_args.do_not_eval:
 # Check for existing checkpoint
 resume_from_checkpoint = None
 if script_args.checkpoint_dir:
-    checkpoint_dir = os.path.join(script_args.checkpoint_dir, script_args.run_name)
+    checkpoint_dir = script_args.checkpoint_dir
     if os.path.exists(checkpoint_dir):
         # Note that here I assume there is only one `checkpoint-*` folder in the
         # checkpoint_dir because I set `save_total_limit=1` in the training arguments.
@@ -183,7 +183,7 @@ training_args = TrainingArguments(
     num_train_epochs=script_args.num_train_epochs,
     weight_decay=script_args.weight_decay,
     save_strategy="steps",
-    save_steps=script_args.save_every_steps,
+    save_steps=script_args.save_steps,
     gradient_accumulation_steps=script_args.gradient_accumulation_steps,
     gradient_checkpointing=script_args.gradient_checkpointing,
     remove_unused_columns=False,

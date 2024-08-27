@@ -131,6 +131,7 @@ class RewardTrainer(Trainer):
             "backward_ce",
             "forward_ce",
             "ce",
+            "sim",
         }, f"Invalid loss type: {loss_type}"
         self.loss_type = loss_type
         self.log_t = log_t
@@ -138,9 +139,19 @@ class RewardTrainer(Trainer):
         self.margin = margin
 
     def compute_loss(self, model, inputs, return_outputs=False):
-        rewards = model(
-            input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
-        )[0]
+        if self.loss_type != "sim":
+            rewards = model(
+                input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
+            )[0]
+        else:
+            outputs = model(
+                input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
+            )
+            rewards = outputs[0]
+            last_hidden_state = outputs.hidden_states[-1][:, -1, :].view(
+                rewards.size(0), -1
+            )
+
         bsz = rewards.size(0)
         jidx = torch.arange(0, bsz, 2)
         kidx = jidx + 1
@@ -176,6 +187,13 @@ class RewardTrainer(Trainer):
             logits = torch.cat([rewards_j, rewards_k], dim=0)
             labels = torch.cat([labels_j, labels_k], dim=0)
             loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
+        elif self.loss_type == "sim":
+            loss = -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
+            chosen_hidden_states = last_hidden_state[jidx]
+            rejected_hidden_states = last_hidden_state[kidx]
+            sim = torch.cosine_similarity(chosen_hidden_states, rejected_hidden_states)
+            self.log({"sim": sim.mean().item()})
+            loss += sim.mean() * self.gamma
 
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}

@@ -191,6 +191,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
     num_labels=1,
     torch_dtype=torch.bfloat16,
     attn_implementation="flash_attention_2",
+    output_hidden_states=True if script_args.loss_type == "sim" else False,
 )
 model.config.use_cache = not script_args.gradient_checkpointing
 if script_args.add_padding_token:

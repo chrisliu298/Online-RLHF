@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -47,10 +48,6 @@ class ScriptArguments:
         default="preference_dataset_mixture2_and_safe_pku",
         metadata={"help": "The dir of the subset of the training data to use"},
     )
-    # eval_set_path: Optional[str] = field(
-    #     default="preference_dataset_mixture2_and_safe_pku",
-    #     metadata={"help": "The dir of the subset of the evaluation data to use"},
-    # )
     eval_set_paths: Optional[List[str]] = field(
         default_factory=lambda: [
             "/mnt/data/yuhaoliu/datasets/rm_datasets/rewardbench_chat",
@@ -121,6 +118,10 @@ class ScriptArguments:
     margin: Optional[float] = field(
         default=0.0, metadata={"help": "The margin for the hinge loss"}
     )
+    checkpoint_dir: Optional[str] = field(
+        default="/mnt/data/yuhaoliu/tmp_checkpoints",
+        metadata={"help": "Directory to check for existing checkpoints"},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -160,6 +161,20 @@ if not script_args.do_not_eval:
     for eval_path, eval_dataset in eval_datasets.items():
         print(f"Evaluation set {eval_path}:", len(eval_dataset))
 
+# Check for existing checkpoint
+resume_from_checkpoint = None
+if script_args.checkpoint_dir:
+    checkpoint_dir = os.path.join(script_args.checkpoint_dir, script_args.run_name)
+    if os.path.exists(checkpoint_dir):
+        # Note that here I assume there is only one `checkpoint-*` folder in the
+        # checkpoint_dir because I set `save_total_limit=1` in the training arguments.
+        # If you saved multiple checkpoints, you must modify this part to
+        # find the correct (latest) checkpoint.
+        checkpoint = os.path.join(checkpoint_dir, os.listdir(checkpoint_dir)[0])
+        if os.path.isdir(checkpoint):
+            resume_from_checkpoint = checkpoint
+            print(f"Resuming training from checkpoint: {resume_from_checkpoint}")
+
 # Define the trainer
 training_args = TrainingArguments(
     output_dir=script_args.output_dir,
@@ -185,6 +200,8 @@ training_args = TrainingArguments(
     per_device_eval_batch_size=script_args.per_device_eval_batch_size,
     eval_steps=script_args.eval_steps,
     run_name=script_args.run_name,
+    resume_from_checkpoint=resume_from_checkpoint,
+    save_total_limit=1,
 )
 model = AutoModelForSequenceClassification.from_pretrained(
     script_args.model_name,
@@ -216,6 +233,6 @@ trainer = RewardTrainer(
     gamma=script_args.gamma,
     margin=script_args.margin,
 )
-trainer.train()
+trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)

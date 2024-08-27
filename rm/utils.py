@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
@@ -7,6 +8,109 @@ import torch.nn as nn
 from datasets import load_dataset, load_from_disk
 from transformers import AutoTokenizer, Trainer
 from transformers.utils import PaddingStrategy
+
+
+def check_valid_checkpoint(base_path):
+    # Define common static files and rng state files
+    static_files_common = [
+        "config.json",
+        "latest",
+        "model.safetensors.index.json",
+        "scheduler.pt",
+        "trainer_state.json",
+        "training_args.bin",
+        "zero_to_fp32.py",
+    ]
+
+    rng_state_files = [f"rng_state_{i}.pth" for i in range(16)]
+
+    # Determine model-specific files
+    if "Meta-Llama-3.1-8B-Instruct" in base_path:
+        model_files = [
+            "model-00001-of-00004.safetensors",
+            "model-00002-of-00004.safetensors",
+            "model-00003-of-00004.safetensors",
+            "model-00004-of-00004.safetensors",
+        ]
+
+        optim_state_files = [
+            f"bf16_zero_pp_rank_{i}_mp_rank_00_optim_states.pt" for i in range(16)
+        ]
+        model_state_files = ["mp_rank_00_model_states.pt"]
+
+    elif "gemma-2-27b-it" in base_path:
+        model_files = [
+            "model-00001-of-00012.safetensors",
+            "model-00002-of-00012.safetensors",
+            "model-00003-of-00012.safetensors",
+            "model-00004-of-00012.safetensors",
+            "model-00005-of-00012.safetensors",
+            "model-00006-of-00012.safetensors",
+            "model-00007-of-00012.safetensors",
+            "model-00008-of-00012.safetensors",
+            "model-00009-of-00012.safetensors",
+            "model-00010-of-00012.safetensors",
+            "model-00011-of-00012.safetensors",
+            "model-00012-of-00012.safetensors",
+        ]
+
+        optim_state_files = [
+            f"bf16_zero_pp_rank_{i}_mp_rank_00_optim_states.pt" for i in range(16)
+        ]
+        model_state_files = [
+            f"zero_pp_rank_{i}_mp_rank_00_model_states.pt" for i in range(16)
+        ]
+
+    else:
+        print("Invalid model_name provided.")
+        return False
+
+    # The pattern for the global_step folder
+    global_step_folder_pattern = "global_step"
+
+    # Find the global_step folder
+    global_step_folder = None
+    for item in os.listdir(base_path):
+        if os.path.isdir(os.path.join(base_path, item)) and item.startswith(
+            global_step_folder_pattern
+        ):
+            global_step_folder = item
+            break
+
+    if global_step_folder is None:
+        print(f"No global_step folder found for {base_path}.")
+        return False
+
+    # Complete paths for the optim state and model state files
+    optim_state_files = [
+        os.path.join(global_step_folder, file) for file in optim_state_files
+    ]
+    model_state_files = [
+        os.path.join(global_step_folder, file) for file in model_state_files
+    ]
+
+    # Combine all file lists
+    all_files = (
+        static_files_common
+        + model_files
+        + rng_state_files
+        + optim_state_files
+        + model_state_files
+    )
+
+    # Check if all files exist
+    missing_files = [
+        file for file in all_files if not os.path.exists(os.path.join(base_path, file))
+    ]
+
+    if missing_files:
+        print("The following files are missing:")
+        for file in missing_files:
+            print(file)
+        return False
+
+    print("All files are present.")
+    return True
 
 
 def build_dataset(tokenizer, train_path):

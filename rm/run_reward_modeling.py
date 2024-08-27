@@ -1,4 +1,5 @@
 import os
+import shutil
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -13,6 +14,7 @@ from utils import (
     RewardDataCollatorWithPadding,
     RewardTrainer,
     build_dataset_local,
+    check_valid_checkpoint,
     compute_metrics,
 )
 
@@ -170,22 +172,15 @@ if script_args.checkpoint_dir:
             d for d in os.listdir(checkpoint_dir) if d.startswith("checkpoint-")
         ]
         if checkpoints:
-            # Sort checkpoints by their step number
-            checkpoints.sort(key=lambda x: int(x.split("-")[1]))
-            # Use the earliest checkpoint
-            earliest_checkpoint = os.path.join(checkpoint_dir, checkpoints[0])
-            if os.path.isdir(earliest_checkpoint):
-                resume_from_checkpoint = earliest_checkpoint
-                print(f"Resuming training from checkpoint: {resume_from_checkpoint}")
-
-                # Remove all later checkpoints
-                for checkpoint in checkpoints[1:]:
-                    checkpoint_path = os.path.join(checkpoint_dir, checkpoint)
-                    if os.path.isdir(checkpoint_path):
-                        import shutil
-
-                        shutil.rmtree(checkpoint_path)
-                        print(f"Removed later checkpoint: {checkpoint_path}")
+            # Sort from latest to oldest
+            checkpoints.sort(key=lambda x: int(x.split("-")[-1]), reverse=True)
+            for checkpoint in checkpoints:
+                if check_valid_checkpoint(os.path.join(checkpoint_dir, checkpoint)):
+                    resume_from_checkpoint = os.path.join(checkpoint_dir, checkpoint)
+                    break
+                else:
+                    # Remove the invalid checkpoint
+                    shutil.rmtree(os.path.join(checkpoint_dir, checkpoint))
 
 # Define the trainer
 training_args = TrainingArguments(

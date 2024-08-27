@@ -236,3 +236,5 @@ trainer = RewardTrainer(
 trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)
+checkpoint_dirs = os.path.join(script_args.output_dir, "checkpoint-*")
+os.system(f"rm -rf {checkpoint_dirs}")

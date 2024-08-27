@@ -1,7 +1,7 @@
 import os
 import shutil
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import Optional
 
 import torch
 from transformers import (
@@ -153,23 +153,25 @@ print("Training set:", len(train_dataset))
 
 # Check for existing checkpoint
 resume_from_checkpoint = None
-if script_args.checkpoint_dir:
-    checkpoint_dir = script_args.checkpoint_dir
-    if os.path.exists(checkpoint_dir):
-        checkpoints = [
-            d for d in os.listdir(checkpoint_dir) if d.startswith("checkpoint-")
-        ]
-        if checkpoints:
-            # Sort from latest to oldest
-            checkpoints.sort(key=lambda x: int(x.split("-")[-1]), reverse=True)
-            for checkpoint in checkpoints:
-                path = os.path.join(checkpoint_dir, checkpoint)
-                if check_valid_checkpoint(path):
-                    resume_from_checkpoint = path
-                    break
-                else:
-                    # Remove the invalid checkpoint
-                    shutil.rmtree(path)
+if script_args.checkpoint_dir and os.path.exists(script_args.checkpoint_dir):
+    checkpoints = sorted(
+        [d for d in os.listdir(script_args.checkpoint_dir) if d.startswith("checkpoint-")],
+        key=lambda x: int(x.split("-")[-1]),
+        reverse=True
+    )
+    for checkpoint in checkpoints:
+        path = os.path.join(script_args.checkpoint_dir, checkpoint)
+        if check_valid_checkpoint(path):
+            resume_from_checkpoint = path
+            break
+        elif torch.distributed.get_rank() == 0:
+            shutil.rmtree(path)
+    
+    if torch.distributed.get_rank() == 0 and resume_from_checkpoint:
+        for old_checkpoint in checkpoints:
+            old_path = os.path.join(script_args.checkpoint_dir, old_checkpoint)
+            if old_path != resume_from_checkpoint:
+                shutil.rmtree(old_path)
 
 # Define the trainer
 training_args = TrainingArguments(

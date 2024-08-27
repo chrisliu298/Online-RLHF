@@ -147,7 +147,11 @@ if script_args.checkpoint_dir and os.path.exists(script_args.checkpoint_dir):
         elif torch.distributed.get_rank() == 0:
             shutil.rmtree(path)
 
-    if torch.distributed.get_rank() == 0 and resume_from_checkpoint:
+    if (
+        torch.distributed.get_rank() == 0
+        and resume_from_checkpoint
+        and len(checkpoints) > 1
+    ):
         for old_checkpoint in checkpoints:
             old_path = os.path.join(script_args.checkpoint_dir, old_checkpoint)
             if old_path != resume_from_checkpoint:

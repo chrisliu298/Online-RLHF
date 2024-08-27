@@ -175,12 +175,13 @@ if script_args.checkpoint_dir:
             # Sort from latest to oldest
             checkpoints.sort(key=lambda x: int(x.split("-")[-1]), reverse=True)
             for checkpoint in checkpoints:
-                if check_valid_checkpoint(os.path.join(checkpoint_dir, checkpoint)):
-                    resume_from_checkpoint = os.path.join(checkpoint_dir, checkpoint)
+                path = os.path.join(checkpoint_dir, checkpoint)
+                if check_valid_checkpoint(path):
+                    resume_from_checkpoint = path
                     break
                 else:
                     # Remove the invalid checkpoint
-                    shutil.rmtree(os.path.join(checkpoint_dir, checkpoint))
+                    shutil.rmtree(path)
 
 # Define the trainer
 training_args = TrainingArguments(

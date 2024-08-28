@@ -149,12 +149,14 @@ with accelerator.split_between_processes(ds) as ds_shard:
     for i, example in enumerate(tqdm(ds_shard)):
         if script_args.eval_prompt:
             rewards = get_reward(
-                change_of_format_with_prompt(
-                    example["prompt"], example["chosen"], script_args.eval_prompt
-                ),
-                change_of_format_with_prompt(
-                    example["prompt"], example["rejected"], script_args.eval_prompt
-                ),
+                [
+                    change_of_format_with_prompt(
+                        example["prompt"], example["chosen"], script_args.eval_prompt
+                    ),
+                    change_of_format_with_prompt(
+                        example["prompt"], example["rejected"], script_args.eval_prompt
+                    ),
+                ]
             )
         else:
             rewards = get_reward(

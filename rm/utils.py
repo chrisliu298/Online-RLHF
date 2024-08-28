@@ -138,19 +138,46 @@ def build_dataset(tokenizer, train_path):
 
 
 def build_dataset_local(tokenizer, train_path, tokenize=True, eval_prompt=None):
+    def format_conversation(conversation):
+        conv = ""
+        roles = {"user": "User: ", "assistant": "Assistant: "}
+        for turn in conversation:
+            conv += f"{roles[turn['role']]}{turn['content']}\n"
+        # Remove the last newline
+        conv = conv[:-1]
+        return conv
+
     def tokenize_func(sample):
-        sample["positive"] = tokenizer.apply_chat_template(
-            sample["chosen"], tokenize=False, add_generation_prompt=False
-        )
-        sample["negative"] = tokenizer.apply_chat_template(
-            sample["rejected"], tokenize=False, add_generation_prompt=False
-        )
+        if eval_prompt:
+            chosen_conv_formatted = format_conversation(sample["chosen"])
+            rejected_conv_formatted = format_conversation(sample["rejected"])
+            chosen_conv_with_prompt = eval_prompt.format(
+                conversation=chosen_conv_formatted
+            )
+            rejected_conv_with_prompt = eval_prompt.format(
+                conversation=rejected_conv_formatted
+            )
+            sample["positive"] = tokenizer.apply_chat_template(
+                [{"role": "user", "content": chosen_conv_with_prompt}],
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+            sample["negative"] = tokenizer.apply_chat_template(
+                [{"role": "user", "content": rejected_conv_with_prompt}],
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+        else:
+            sample["positive"] = tokenizer.apply_chat_template(
+                sample["chosen"], tokenize=False, add_generation_prompt=False
+            )
+            sample["negative"] = tokenizer.apply_chat_template(
+                sample["rejected"], tokenize=False, add_generation_prompt=False
+            )
+
         if tokenizer.bos_token is not None:
             sample["positive"] = sample["positive"].replace(tokenizer.bos_token, "")
             sample["negative"] = sample["negative"].replace(tokenizer.bos_token, "")
-        if eval_prompt:
-            sample["positive"] = eval_prompt.format(conversation=sample["positive"])
-            sample["negative"] = eval_prompt.format(conversation=sample["negative"])
         tokenized_pos = tokenizer(sample["positive"], truncation=True)
         tokenized_neg = tokenizer(sample["negative"], truncation=True)
         sample["input_ids_j"] = tokenized_pos["input_ids"]

@@ -223,7 +223,14 @@ def t_log_sigmoid(x, t):
 
 class RewardTrainer(Trainer):
     def __init__(
-        self, loss_type="bt", log_t=1.0, gamma=0.0, margin=1.0, *args, **kwargs
+        self,
+        loss_type="bt",
+        log_t=1.0,
+        gamma=0.0,
+        margin=1.0,
+        log_reward=False,
+        *args,
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
         assert loss_type in {
@@ -242,6 +249,7 @@ class RewardTrainer(Trainer):
         self.log_t = log_t
         self.gamma = gamma
         self.margin = margin
+        self.log_reward = log_reward
 
     def compute_loss(self, model, inputs, return_outputs=False):
         if self.loss_type not in {"sim", "sim_per_layer"}:
@@ -324,7 +332,8 @@ class RewardTrainer(Trainer):
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}
 
-        self.log({"rewards/chosen": rewards_j.mean().item()})
-        self.log({"rewards/rejected": rewards_k.mean().item()})
+        if self.log_reward:
+            self.log({"rewards/chosen": rewards_j.mean().item()})
+            self.log({"rewards/rejected": rewards_k.mean().item()})
 
         return loss

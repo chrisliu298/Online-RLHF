@@ -101,6 +101,9 @@ class ScriptArguments:
         default=None,
         metadata={"help": "Directory to check for existing checkpoints"},
     )
+    log_reward: Optional[bool] = field(
+        default=False, metadata={"help": "Log reward during training"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -210,6 +213,7 @@ trainer = RewardTrainer(
     log_t=script_args.log_t,
     gamma=script_args.gamma,
     margin=script_args.margin,
+    log_reward=script_args.log_reward,
 )
 trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 trainer.save_model(script_args.output_dir)

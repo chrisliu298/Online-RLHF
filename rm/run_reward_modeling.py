@@ -148,13 +148,15 @@ if script_args.checkpoint_dir and os.path.exists(script_args.checkpoint_dir):
             resume_from_checkpoint = path
             break
         else:
-            shutil.rmtree(path)
+            if os.path.exists(path):
+                shutil.rmtree(path)
 
     if resume_from_checkpoint and len(checkpoints) > 1:
         for old_checkpoint in checkpoints:
             old_path = os.path.join(script_args.checkpoint_dir, old_checkpoint)
             if old_path != resume_from_checkpoint:
-                shutil.rmtree(old_path)
+                if os.path.exists(old_path):
+                    shutil.rmtree(old_path)
 
 # Define the trainer
 training_args = TrainingArguments(

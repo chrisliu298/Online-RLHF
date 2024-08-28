@@ -121,8 +121,6 @@ def change_of_format_with_prompt(prompt, resp, eval_prompt):
         tokenize=False,
         add_generation_prompt=True,
     )
-    print(formatted)
-    exit()
     if rm_tokenizer.bos_token is None:
         return formatted
     else:

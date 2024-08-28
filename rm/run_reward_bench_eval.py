@@ -40,6 +40,9 @@ class ScriptArguments:
         default="gemma-2b-it_preference_dataset_mixture2_and_safe_pku",
         metadata={"help": "the name of the gold reward model"},
     )
+    eval_prompt: Optional[str] = field(
+        default="", metadata={"help": "The input prompt"}
+    )
 
 
 accelerator = Accelerator()
@@ -87,16 +90,39 @@ def change_of_format(prompt, resp):
         {"role": "user", "content": prompt},
         {"role": "assistant", "content": resp},
     ]
-    # try:
-    #     return rm_tokenizer.apply_chat_template(message, tokenize=False).replace(
-    #         rm_tokenizer.bos_token, ""
-    #     )
-    # except:
     formatted = rm_tokenizer.apply_chat_template(message, tokenize=False)
-    try:
-        return formatted.replace(rm_tokenizer.bos_token, "")
-    except:
+    if rm_tokenizer.bos_token is None:
         return formatted
+    else:
+        return formatted.replace(rm_tokenizer.bos_token, "")
+
+
+def format_conversation(conversation):
+    conv = ""
+    roles = {"user": "User: ", "assistant": "Assistant: "}
+    for turn in conversation:
+        conv += f"{roles[turn['role']]}{turn['content']}\n"
+    # Remove the last newline
+    conv = conv[:-1]
+    return conv
+
+
+def change_of_format_with_prompt(prompt, resp, eval_prompt):
+    conversation = [
+        {"role": "user", "content": prompt},
+        {"role": "assistant", "content": resp},
+    ]
+    conv_formatted = format_conversation(conversation)
+    conv_with_prompt = eval_prompt.format(conversation=conv_formatted)
+    formatted = rm_tokenizer.apply_chat_template(
+        [{"role": "user", "content": conv_with_prompt}],
+        tokenize=False,
+        add_generation_prompt=True,
+    )
+    if rm_tokenizer.bos_token is None:
+        return formatted
+    else:
+        return formatted.replace(rm_tokenizer.bos_token, "")
 
 
 def get_reward(test_texts):
@@ -121,13 +147,22 @@ accelerator.wait_for_everyone()
 with accelerator.split_between_processes(ds) as ds_shard:
     rows = dict(results=[])
     for i, example in enumerate(tqdm(ds_shard)):
-
-        rewards = get_reward(
-            [
-                change_of_format(example["prompt"], example["chosen"]),
-                change_of_format(example["prompt"], example["rejected"]),
-            ]
-        )
+        if script_args.eval_prompt:
+            rewards = get_reward(
+                change_of_format_with_prompt(
+                    example["prompt"], example["chosen"], script_args.eval_prompt
+                ),
+                change_of_format_with_prompt(
+                    example["prompt"], example["rejected"], script_args.eval_prompt
+                ),
+            )
+        else:
+            rewards = get_reward(
+                [
+                    change_of_format(example["prompt"], example["chosen"]),
+                    change_of_format(example["prompt"], example["rejected"]),
+                ]
+            )
 
         if rewards[0] == rewards[1]:
             correct = 0.5

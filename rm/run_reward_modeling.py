@@ -106,7 +106,7 @@ class ScriptArguments:
         default=False, metadata={"help": "Log reward during training"}
     )
     eval_prompt: Optional[str] = field(
-        default="helpsteer_attr", metadata={"help": "The input prompt"}
+        default="", metadata={"help": "The input prompt"}
     )
 
 
@@ -129,7 +129,9 @@ if script_args.load_data_from_local:
         tokenizer,
         train_path,
         tokenize=script_args.tokenize_train,
-        eval_prompt=eval_prompts[script_args.eval_prompt],
+        eval_prompt=eval_prompts[script_args.eval_prompt]
+        if script_args.eval_prompt
+        else None,
     )
 
 else:

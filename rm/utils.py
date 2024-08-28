@@ -137,7 +137,7 @@ def build_dataset(tokenizer, train_path):
     return dataset
 
 
-def build_dataset_local(tokenizer, train_path, tokenize=True):
+def build_dataset_local(tokenizer, train_path, tokenize=True, eval_prompt=None):
     def tokenize_func(sample):
         sample["positive"] = tokenizer.apply_chat_template(
             sample["chosen"], tokenize=False, add_generation_prompt=False
@@ -148,6 +148,9 @@ def build_dataset_local(tokenizer, train_path, tokenize=True):
         if tokenizer.bos_token is not None:
             sample["positive"] = sample["positive"].replace(tokenizer.bos_token, "")
             sample["negative"] = sample["negative"].replace(tokenizer.bos_token, "")
+        if eval_prompt:
+            sample["positive"] = eval_prompt.format(conversation=sample["positive"])
+            sample["negative"] = eval_prompt.format(conversation=sample["negative"])
         tokenized_pos = tokenizer(sample["positive"], truncation=True)
         tokenized_neg = tokenizer(sample["negative"], truncation=True)
         sample["input_ids_j"] = tokenized_pos["input_ids"]

@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
+from prompts import eval_prompts
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -104,6 +105,9 @@ class ScriptArguments:
     log_reward: Optional[bool] = field(
         default=False, metadata={"help": "Log reward during training"}
     )
+    eval_prompt: Optional[str] = field(
+        default="helpsteer_attr", metadata={"help": "The input prompt"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -122,7 +126,10 @@ tokenizer.model_max_length = script_args.max_length
 train_path = script_args.train_set_path
 if script_args.load_data_from_local:
     train_dataset = build_dataset_local(
-        tokenizer, train_path, tokenize=script_args.tokenize_train
+        tokenizer,
+        train_path,
+        tokenize=script_args.tokenize_train,
+        eval_prompt=eval_prompts[script_args.eval_prompt],
     )
 
 else:

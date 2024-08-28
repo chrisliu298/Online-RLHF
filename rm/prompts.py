@@ -1,5 +1,5 @@
 helpsteer_attr = """
-Evaluate the following conversation based on these attributes and provide a single score on a Likert-5 scale (0, 1, 2, 3, 4), where:
+Evaluate the following conversation between a human and an LLM assistant based on these attributes and provide a single score on a Likert-5 scale (0, 1, 2, 3, 4), where:
 - 0 indicates the poorest performance.
 - 4 indicates the best performance.
 
@@ -25,7 +25,7 @@ Use this information to provide a single overall score for the conversation acco
 Score:"""
 
 helpsteer_attr_no_score = """
-Evaluate the following conversation based on these attributes and provide a single score on a Likert-5 scale (0, 1, 2, 3, 4), where:
+Evaluate the following conversation between a human and an LLM assistant based on these attributes and provide a single score on a Likert-5 scale (0, 1, 2, 3, 4), where:
 - 0 indicates the poorest performance.
 - 4 indicates the best performance.
 

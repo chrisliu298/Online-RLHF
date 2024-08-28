@@ -98,7 +98,7 @@ class ScriptArguments:
         default=0.0, metadata={"help": "The margin for the hinge loss"}
     )
     checkpoint_dir: Optional[str] = field(
-        default="/mnt/data/yuhaoliu/tmp_checkpoints",
+        default=None,
         metadata={"help": "Directory to check for existing checkpoints"},
     )
 

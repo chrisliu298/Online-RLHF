@@ -325,7 +325,9 @@ class RewardTrainer(Trainer):
             rejected_hidden_states = []
             sim = 0.0
             for h in last_hidden_states:
-                sim += torch.cosine_similarity(h[jidx], h[kidx])
+                sim += torch.cosine_similarity(h[jidx], h[kidx]) / len(
+                    last_hidden_states
+                )
             self.log({"sim": sim.mean().item()})
             loss += sim.mean() * self.gamma
 

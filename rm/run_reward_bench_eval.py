@@ -11,6 +11,7 @@ import torch
 from accelerate import Accelerator
 from accelerate.utils import gather_object
 from datasets import load_dataset
+from prompts import eval_prompts
 from tqdm import tqdm
 from transformers import (
     AutoModelForSequenceClassification,
@@ -113,9 +114,7 @@ def change_of_format_with_prompt(prompt, resp, eval_prompt):
         {"role": "assistant", "content": resp},
     ]
     conv_formatted = format_conversation(conversation)
-    conv_with_prompt = eval_prompt[script_args.eval_prompt].format(
-        conversation=conv_formatted
-    )
+    conv_with_prompt = eval_prompt.format(conversation=conv_formatted)
     formatted = rm_tokenizer.apply_chat_template(
         [{"role": "user", "content": conv_with_prompt}],
         tokenize=False,
@@ -153,10 +152,14 @@ with accelerator.split_between_processes(ds) as ds_shard:
             rewards = get_reward(
                 [
                     change_of_format_with_prompt(
-                        example["prompt"], example["chosen"], script_args.eval_prompt
+                        example["prompt"],
+                        example["chosen"],
+                        eval_prompts[script_args.eval_prompt],
                     ),
                     change_of_format_with_prompt(
-                        example["prompt"], example["rejected"], script_args.eval_prompt
+                        example["prompt"],
+                        example["rejected"],
+                        eval_prompts[script_args.eval_prompt],
                     ),
                 ]
             )

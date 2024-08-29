@@ -274,6 +274,7 @@ class RewardTrainer(Trainer):
             "ce",
             "sim",
             "sim_per_layer",
+            "bt_per_layer",
         }, f"Invalid loss type: {loss_type}"
         self.loss_type = loss_type
         self.log_t = log_t
@@ -282,7 +283,7 @@ class RewardTrainer(Trainer):
         self.log_reward = log_reward
 
     def compute_loss(self, model, inputs, return_outputs=False):
-        if self.loss_type not in {"sim", "sim_per_layer"}:
+        if self.loss_type not in {"sim", "sim_per_layer", "bt_per_layer"}:
             rewards = model(
                 input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
             )[0]
@@ -299,13 +300,18 @@ class RewardTrainer(Trainer):
                 input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
             )
             rewards = outputs[0]
-            # last_hidden_state = outputs.hidden_states[-1][:, -1, :].view(
-            #     rewards.size(0), -1
-            # )
             hidden_states = outputs.hidden_states[1:]
             last_hidden_states = [
                 h[:, -1, :].view(rewards.size(0), -1) for h in hidden_states
             ]
+        elif self.loss_type == "bt_per_layer":
+            outputs = model(
+                input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"]
+            )
+            rewards = outputs[0]
+            hidden_states = outputs.hidden_states[:-1]
+            assert len(hidden_states) == len(model.model.layers)
+            intermediate_rewards = [model.score(h) for h in hidden_states]
 
         bsz = rewards.size(0)
         jidx = torch.arange(0, bsz, 2)
@@ -360,6 +366,16 @@ class RewardTrainer(Trainer):
                 )
             self.log({"sim": sim.mean().item()})
             loss += sim.mean() * self.gamma
+        elif self.loss_type == "bt_per_layer":
+            last_layer_loss = -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
+            intermediate_losses = []
+            for i, r in enumerate(intermediate_rewards):
+                layer_loss = -nn.functional.logsigmoid(r[jidx] - r[kidx]).mean()
+                intermediate_losses.append(layer_loss)
+            intermediate_loss = torch.stack(intermediate_losses).sum()
+            loss = (last_layer_loss + intermediate_loss) / (
+                1 + len(intermediate_losses)
+            )
 
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}

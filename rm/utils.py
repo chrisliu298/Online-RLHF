@@ -10,7 +10,7 @@ from transformers import AutoTokenizer, Trainer
 from transformers.utils import PaddingStrategy
 
 
-def check_valid_checkpoint(base_path):
+def check_valid_checkpoint(base_path, world_size):
     # Define common static files and rng state files
     static_files_common = [
         "config.json",
@@ -22,7 +22,7 @@ def check_valid_checkpoint(base_path):
         "zero_to_fp32.py",
     ]
 
-    rng_state_files = [f"rng_state_{i}.pth" for i in range(16)]
+    rng_state_files = [f"rng_state_{i}.pth" for i in range(world_size)]
 
     # Determine model-specific files
     if "Meta-Llama-3.1-8B-Instruct" in base_path:
@@ -34,7 +34,8 @@ def check_valid_checkpoint(base_path):
         ]
 
         optim_state_files = [
-            f"bf16_zero_pp_rank_{i}_mp_rank_00_optim_states.pt" for i in range(16)
+            f"bf16_zero_pp_rank_{i}_mp_rank_00_optim_states.pt"
+            for i in range(world_size)
         ]
         model_state_files = ["mp_rank_00_model_states.pt"]
 
@@ -55,10 +56,11 @@ def check_valid_checkpoint(base_path):
         ]
 
         optim_state_files = [
-            f"bf16_zero_pp_rank_{i}_mp_rank_00_optim_states.pt" for i in range(16)
+            f"bf16_zero_pp_rank_{i}_mp_rank_00_optim_states.pt"
+            for i in range(world_size)
         ]
         model_state_files = [
-            f"zero_pp_rank_{i}_mp_rank_00_model_states.pt" for i in range(16)
+            f"zero_pp_rank_{i}_mp_rank_00_model_states.pt" for i in range(world_size)
         ]
 
     else:

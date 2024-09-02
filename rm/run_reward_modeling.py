@@ -153,7 +153,7 @@ if script_args.checkpoint_dir and os.path.exists(script_args.checkpoint_dir):
     )
     for checkpoint in checkpoints:
         path = os.path.join(script_args.checkpoint_dir, checkpoint)
-        if check_valid_checkpoint(path, os.environ["WORLD_SIZE"] * 8):
+        if check_valid_checkpoint(path, int(os.environ["WORLD_SIZE"]) * 8):
             resume_from_checkpoint = path
             break
         else:

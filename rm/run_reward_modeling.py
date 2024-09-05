@@ -108,6 +108,9 @@ class ScriptArguments:
     eval_prompt: Optional[str] = field(
         default="", metadata={"help": "The input prompt"}
     )
+    save_total_limit: Optional[int] = field(
+        default=1, metadata={"help": "The number of checkpoints to save"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -190,7 +193,7 @@ training_args = TrainingArguments(
     report_to="wandb",
     run_name=script_args.run_name,
     resume_from_checkpoint=resume_from_checkpoint,
-    save_total_limit=1,
+    save_total_limit=script_args.save_total_limit,
 )
 model = AutoModelForSequenceClassification.from_pretrained(
     script_args.model_name,

@@ -111,6 +111,9 @@ class ScriptArguments:
     save_total_limit: Optional[int] = field(
         default=1, metadata={"help": "The number of checkpoints to save"}
     )
+    load_reward_head: Optional[bool] = field(
+        default=False, metadata={"help": "Load the reward head"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -204,6 +207,13 @@ model = AutoModelForSequenceClassification.from_pretrained(
     if script_args.loss_type in {"sim", "sim_per_layer", "bt_per_layer"}
     else False,
 )
+if script_args.load_reward_head:
+    state_dict_path = (
+        "/mnt/data/yuhaoliu/Skywork-Reward-Gemma-2-27B-Reward-Head.pt"
+        if "gemma" in script_args.model_name.lower()
+        else "/mnt/data/yuhaoliu/Skywork-Reward-Llama-3.1-8B-Reward-Head.pt"
+    )
+    model.score.load_state_dict(torch.load(state_dict_path))
 model.config.use_cache = not script_args.gradient_checkpointing
 if script_args.add_padding_token:
     model.config.pad_token_id = tokenizer.pad_token_id

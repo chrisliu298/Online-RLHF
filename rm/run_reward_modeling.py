@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
-from prompts import eval_prompts
 from transformers import (
     AutoModelForSequenceClassification,
     AutoTokenizer,
@@ -105,14 +104,11 @@ class ScriptArguments:
     log_reward: Optional[bool] = field(
         default=False, metadata={"help": "Log reward during training"}
     )
-    eval_prompt: Optional[str] = field(
-        default="", metadata={"help": "The input prompt"}
-    )
     save_total_limit: Optional[int] = field(
         default=1, metadata={"help": "The number of checkpoints to save"}
     )
-    load_reward_head: Optional[bool] = field(
-        default=False, metadata={"help": "Load the reward head"}
+    use_liger_kernel: Optional[bool] = field(
+        default=False, metadata={"help": "Use liger kernel"}
     )
 
 
@@ -132,12 +128,7 @@ tokenizer.model_max_length = script_args.max_length
 train_path = script_args.train_set_path
 if script_args.load_data_from_local:
     train_dataset = build_dataset_local(
-        tokenizer,
-        train_path,
-        tokenize=script_args.tokenize_train,
-        eval_prompt=eval_prompts[script_args.eval_prompt]
-        if script_args.eval_prompt
-        else None,
+        tokenizer, train_path, tokenize=script_args.tokenize_train
     )
 
 else:
@@ -197,6 +188,7 @@ training_args = TrainingArguments(
     run_name=script_args.run_name,
     resume_from_checkpoint=resume_from_checkpoint,
     save_total_limit=script_args.save_total_limit,
+    use_liger_kernel=script_args.use_liger_kernel,
 )
 model = AutoModelForSequenceClassification.from_pretrained(
     script_args.model_name,
@@ -230,13 +222,6 @@ trainer = RewardTrainer(
     margin=script_args.margin,
     log_reward=script_args.log_reward,
 )
-if script_args.load_reward_head:
-    state_dict_path = (
-        "/mnt/data/yuhaoliu/Skywork-Reward-Gemma-2-27B-Reward-Head.pt"
-        if "gemma" in script_args.model_name.lower()
-        else "/mnt/data/yuhaoliu/Skywork-Reward-Llama-3.1-8B-Reward-Head.pt"
-    )
-    model.score.load_state_dict(torch.load(state_dict_path))
 trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)

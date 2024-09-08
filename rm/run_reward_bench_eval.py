@@ -11,7 +11,6 @@ import torch
 from accelerate import Accelerator
 from accelerate.utils import gather_object
 from datasets import load_dataset
-from prompts import eval_prompts
 from tqdm import tqdm
 from transformers import (
     AutoModelForSequenceClassification,
@@ -40,9 +39,6 @@ class ScriptArguments:
     reward_name_or_path: Optional[str] = field(
         default="gemma-2b-it_preference_dataset_mixture2_and_safe_pku",
         metadata={"help": "the name of the gold reward model"},
-    )
-    eval_prompt: Optional[str] = field(
-        default="", metadata={"help": "The input prompt"}
     )
 
 
@@ -108,24 +104,6 @@ def format_conversation(conversation):
     return conv
 
 
-def change_of_format_with_prompt(prompt, resp, eval_prompt):
-    conversation = [
-        {"role": "user", "content": prompt},
-        {"role": "assistant", "content": resp},
-    ]
-    conv_formatted = format_conversation(conversation)
-    conv_with_prompt = eval_prompt.format(conversation=conv_formatted)
-    formatted = rm_tokenizer.apply_chat_template(
-        [{"role": "user", "content": conv_with_prompt}],
-        tokenize=False,
-        add_generation_prompt=True,
-    )
-    if rm_tokenizer.bos_token is None:
-        return formatted
-    else:
-        return formatted.replace(rm_tokenizer.bos_token, "")
-
-
 def get_reward(test_texts):
     # pipe_outputs = rm_pipe(test_texts, **pipe_kwargs)
     # rewards = [output[0]["score"] for output in pipe_outputs]
@@ -148,28 +126,12 @@ accelerator.wait_for_everyone()
 with accelerator.split_between_processes(ds) as ds_shard:
     rows = dict(results=[])
     for i, example in enumerate(tqdm(ds_shard)):
-        if script_args.eval_prompt:
-            rewards = get_reward(
-                [
-                    change_of_format_with_prompt(
-                        example["prompt"],
-                        example["chosen"],
-                        eval_prompts[script_args.eval_prompt],
-                    ),
-                    change_of_format_with_prompt(
-                        example["prompt"],
-                        example["rejected"],
-                        eval_prompts[script_args.eval_prompt],
-                    ),
-                ]
-            )
-        else:
-            rewards = get_reward(
-                [
-                    change_of_format(example["prompt"], example["chosen"]),
-                    change_of_format(example["prompt"], example["rejected"]),
-                ]
-            )
+        rewards = get_reward(
+            [
+                change_of_format(example["prompt"], example["chosen"]),
+                change_of_format(example["prompt"], example["rejected"]),
+            ]
+        )
 
         if rewards[0] == rewards[1]:
             correct = 0.5

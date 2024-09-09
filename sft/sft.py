@@ -136,7 +136,7 @@ trainer = SFTTrainer(
     dataset_text_field="text",
     max_seq_length=script_args.max_length,
     packing=True,
-    dataset_batch_size=10000,
+    dataset_num_proc=os.cpu_count(),
 )
 
 trainer.train()

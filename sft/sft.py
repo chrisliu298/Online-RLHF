@@ -21,19 +21,9 @@ class ScriptArguments:
     what their capacity and features are, and what size model you want to train.
     """
 
-    local_rank: Optional[int] = field(
-        default=-1, metadata={"help": "Used for multi-gpu"}
-    )
     resume_from_checkpoint: Optional[bool] = field(
         default=False,
         metadata={"help": "If you want to resume training where it left off."},
-    )
-    deepspeed: Optional[str] = field(
-        default=None,
-        metadata={
-            "help": "Path to deepspeed config if using deepspeed. \
-            You may need this if the model that you want to train doesn't fit on a single GPU."
-        },
     )
     per_device_train_batch_size: Optional[int] = field(default=1)
     per_device_eval_batch_size: Optional[int] = field(default=1)
@@ -100,8 +90,6 @@ training_args = TrainingArguments(
     save_steps=1000000000,
     gradient_accumulation_steps=script_args.gradient_accumulation_steps,
     gradient_checkpointing=script_args.gradient_checkpointing,
-    deepspeed=script_args.deepspeed,
-    local_rank=script_args.local_rank,
     remove_unused_columns=True,
     label_names=[],
     bf16=script_args.bf16,

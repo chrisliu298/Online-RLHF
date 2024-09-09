@@ -1,10 +1,9 @@
-import os
 from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
-
-from datasets import load_dataset
+from chat_templates import chat_templates
+from datasets import load_from_disk
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -12,9 +11,6 @@ from transformers import (
     TrainingArguments,
 )
 from trl import SFTTrainer
-
-# import evaluate
-# from peft import LoraConfig, TaskType, get_peft_model
 
 
 # Define and parse arguments.
@@ -80,23 +76,19 @@ class ScriptArguments:
         default="cosine",
         metadata={"help": "The lr scheduler"},
     )
-
     max_training_samples: Optional[int] = field(
         default=-1, metadata={"help": "the maximum sample size"}
     )
-
     max_length: Optional[int] = field(default=4096)
-    output_dir: Optional[str] = field(default="./sft_models")
-
-    def __post_init__(self):
-        if self.output_dir == "./sft_models":
-            self.output_dir = f"./sft_models/{self.model_name}_{self.dataset_name}"
+    output_dir: Optional[str] = field(default="./models/sft_model_llama3")
+    use_liger_kernel: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Use liger kernel for faster training."},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
 script_args = parser.parse_args_into_dataclasses()[0]
-
-
 training_args = TrainingArguments(
     output_dir=script_args.output_dir,
     learning_rate=script_args.learning_rate,
@@ -119,11 +111,11 @@ training_args = TrainingArguments(
     lr_scheduler_type=script_args.lr_scheduler_type,
     warmup_ratio=0.03,
     report_to="wandb",
+    use_liger_kernel=script_args.use_liger_kernel,
 )
 
 
-dataset = load_dataset(script_args.dataset_name, split="train")
-
+dataset = load_from_disk(script_args.dataset_name)
 
 if script_args.max_training_samples > 0:
     dataset = dataset.select(range(script_args.max_training_samples))
@@ -137,23 +129,25 @@ model = AutoModelForCausalLM.from_pretrained(
 tokenizer = AutoTokenizer.from_pretrained(
     script_args.model_name, trust_remote_code=True
 )
-if script_args.model_name == "Meta-Llama-3-8B":
+if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
     print("We set the pad token as the eos token by default....")
-# tokenizer.truncation_side = "left"
 tokenizer.model_max_length = script_args.max_length
-if script_args.model_name == "Meta-Llama-3-8B":
-    tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
+if "Meta-Llama-3-8B" in script_args.model_name:
+    tokenizer.chat_template = chat_templates["Meta-Llama-3-8B"]
+elif "Meta-Llama-3.1-8B" in script_args.model_name:
+    tokenizer.chat_template = chat_templates["Meta-Llama-3.1-8B"]
+elif "gemma-2-9b" in script_args.model_name:
+    tokenizer.chat_template = chat_templates["gemma-2-9b"]
 else:
-    tokenizer.chat_template = "{% for message in messages %}{% if loop.first and messages[0]['role'] != 'system' %}{{ '<|im_start|>system\nYou are a helpful assistant.<|im_end|>\n' }}{% endif %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
+    raise ValueError(f"Model {script_args.model_name} not supported")
 
 
 def formatting_prompts_func(example):
     return {"text": tokenizer.apply_chat_template(example["messages"], tokenize=False)}
 
 
-ds = dataset.map(formatting_prompts_func, batched=False, num_proc=os.cpu_count())
-# formatting_prompts_func
+ds = dataset.map(formatting_prompts_func, batched=False)
 
 trainer = SFTTrainer(
     model=model,
@@ -161,7 +155,6 @@ trainer = SFTTrainer(
     train_dataset=ds,
     args=training_args,
     dataset_text_field="text",
-    # formatting_func=,
     max_seq_length=script_args.max_length,
     packing=True,
 )
@@ -170,3 +163,4 @@ trainer.train()
 print("Saving last checkpoint of the model")
 
 trainer.save_model(script_args.output_dir)
+tokenizer.save_pretrained(script_args.output_dir)

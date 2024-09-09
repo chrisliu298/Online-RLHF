@@ -118,14 +118,7 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
     print("We set the pad token as the eos token by default....")
 tokenizer.model_max_length = script_args.max_length
-if "Meta-Llama-3-8B" in script_args.model_name:
-    tokenizer.chat_template = chat_templates["Meta-Llama-3-8B"]
-elif "Meta-Llama-3.1-8B" in script_args.model_name:
-    tokenizer.chat_template = chat_templates["Meta-Llama-3.1-8B"]
-elif "gemma-2-9b" in script_args.model_name:
-    tokenizer.chat_template = chat_templates["gemma-2-9b"]
-else:
-    raise ValueError(f"Model {script_args.model_name} not supported")
+tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]
 
 
 def formatting_prompts_func(example):

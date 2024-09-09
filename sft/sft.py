@@ -11,7 +11,7 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
 )
-from trl import SFTTrainer
+from trl import DataCollatorForCompletionOnlyLM, SFTTrainer
 
 
 # Define and parse arguments.
@@ -123,10 +123,18 @@ tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]
 
 
 def formatting_prompts_func(example):
-    return {"text": tokenizer.apply_chat_template(example["messages"], tokenize=False)}
+    return {
+        "text": tokenizer.apply_chat_template(
+            example["messages"], tokenize=False
+        ).replace(tokenizer.bos_token, "")
+    }
 
 
 ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
+collator = DataCollatorForCompletionOnlyLM(
+    response_template="</score><|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
+    tokenizer=tokenizer,
+)
 
 trainer = SFTTrainer(
     model=model,
@@ -135,7 +143,8 @@ trainer = SFTTrainer(
     args=training_args,
     dataset_text_field="text",
     max_seq_length=script_args.max_length,
-    packing=True,
+    packing=False,
+    data_collator=collator,
 )
 
 trainer.train()

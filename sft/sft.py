@@ -145,6 +145,7 @@ trainer = SFTTrainer(
     max_seq_length=script_args.max_length,
     packing=False,
     data_collator=collator,
+    dataset_num_proc=os.cpu_count(),
 )
 
 trainer.train()

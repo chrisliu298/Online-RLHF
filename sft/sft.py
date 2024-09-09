@@ -76,6 +76,13 @@ class ScriptArguments:
         default=False,
         metadata={"help": "Use liger kernel for faster training."},
     )
+    deepspeed: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Path to deepspeed config if using deepspeed. \
+            You may need this if the model that you want to train doesn't fit on a single GPU."
+        },
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -101,6 +108,7 @@ training_args = TrainingArguments(
     warmup_ratio=0.03,
     report_to="wandb",
     use_liger_kernel=script_args.use_liger_kernel,
+    deepspeed=script_args.deepspeed,
 )
 
 

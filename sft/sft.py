@@ -111,12 +111,9 @@ if script_args.max_training_samples > 0:
 model = AutoModelForCausalLM.from_pretrained(
     script_args.model_name,
     torch_dtype=torch.bfloat16,
-    use_flash_attention_2=True,
-    trust_remote_code=True,
-).to("cuda")
-tokenizer = AutoTokenizer.from_pretrained(
-    script_args.model_name, trust_remote_code=True
+    attn_implementation="flash_attention_2",
 )
+tokenizer = AutoTokenizer.from_pretrained(script_args.model_name)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = tokenizer.eos_token
     print("We set the pad token as the eos token by default....")

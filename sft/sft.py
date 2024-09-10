@@ -83,6 +83,10 @@ class ScriptArguments:
             You may need this if the model that you want to train doesn't fit on a single GPU."
         },
     )
+    use_chat_template: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Use chat template for SFT."},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -131,12 +135,9 @@ if "-Instruct" in script_args.model_name or "-it" in script_args.model_name:
     tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]
 else:
     tokenizer.chat_template = ""
-# elif script_args.model_name.endswith("Meta-Llama-3-8B"):
-#     tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
-# elif script_args.model_name.endswith("Meta-Llama-3.1-8B"):
-#     tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
-# elif script_args.model_name.endswith("gemma-2-9b"):
-#     tokenizer.chat_template = "{% if messages[0]['role'] == 'system' %}{{ raise_exception('System role not supported') }}{% endif %}{% for message in messages %}{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if (message['role'] == 'assistant') %}{% set role = 'model' %}{% else %}{% set role = message['role'] %}{% endif %}{{ '<start_of_turn>' + role + '\n' + message['content'] | trim + '<end_of_turn>\n' }}{% endfor %}{% if add_generation_prompt %}{{'<start_of_turn>model\n'}}{% endif %}"
+
+if script_args.use_chat_template:
+    tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
 
 
 def formatting_prompts_func(example):

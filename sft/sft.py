@@ -128,8 +128,8 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 tokenizer = AutoTokenizer.from_pretrained(script_args.model_name)
 if tokenizer.pad_token is None:
-    tokenizer.pad_token = tokenizer.eos_token
-    print("We set the pad token as the eos token by default....")
+    tokenizer.pad_token = "<|finetune_right_pad_id|>"
+    model.config.pad_token_id = tokenizer.pad_token_id
 tokenizer.model_max_length = script_args.max_length
 if "-Instruct" in script_args.model_name or "-it" in script_args.model_name:
     tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]

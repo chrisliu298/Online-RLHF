@@ -7,7 +7,7 @@ from datasets import load_from_disk
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    DataCollatorWithPadding,
+    DataCollatorForLanguageModeling,
     HfArgumentParser,
     Trainer,
     TrainingArguments,
@@ -138,7 +138,7 @@ else:
     tokenizer.chat_template = ""
 
 ds = prepare_dataset(dataset, tokenizer, script_args.train_on_response, separator)
-collator = DataCollatorWithPadding(tokenizer=tokenizer)
+collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 trainer = Trainer(
     model=model,

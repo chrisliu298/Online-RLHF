@@ -332,7 +332,7 @@ class RewardTrainer(Trainer):
             margin_prob = torch.sigmoid(rewards_j - rewards_k)
             zeros = torch.zeros_like(margin_prob)
             # Stack in the 0th dimension
-            margin_prob_zeros = torch.cat([margin_prob, zeros], dim=0)
+            margin_prob_zeros = torch.cat([margin_prob - 0.5, zeros], dim=0)
             ranking_loss = (
                 -((1 - 2 * torch.max(margin_prob_zeros, dim=0).values) ** self.gamma)
                 * torch.log(margin_prob)

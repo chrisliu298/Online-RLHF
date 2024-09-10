@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -8,10 +7,12 @@ from datasets import load_from_disk
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
+    DataCollatorForLanguageModeling,
     HfArgumentParser,
+    Trainer,
     TrainingArguments,
 )
-from trl import SFTTrainer
+from utils import prepare_dataset
 
 
 # Define and parse arguments.
@@ -85,6 +86,14 @@ class ScriptArguments:
         default=False,
         metadata={"help": "Use chat template for SFT."},
     )
+    train_on_response: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Train on response only."},
+    )
+    separator: Optional[str] = field(
+        default=None,
+        metadata={"help": "Separator for the dataset."},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -129,8 +138,11 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
     model.config.pad_token_id = tokenizer.pad_token_id
 tokenizer.model_max_length = script_args.max_length
-if "-Instruct" in script_args.model_name or "-it" in script_args.model_name:
+if "-Instruct" in script_args.model_name:
     tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]
+    script_args.separator = (
+        "</score><|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+    )
 else:
     tokenizer.chat_template = ""
 
@@ -138,34 +150,17 @@ if script_args.use_chat_template:
     tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
 
 
-def formatting_prompts_func(example):
-    return {
-        "text": tokenizer.apply_chat_template(
-            example["messages"], tokenize=False
-        ).replace(tokenizer.bos_token, "")
-        if tokenizer.chat_template != ""
-        else example["messages"][0]["content"]
-        + example["messages"][1]["content"]
-        + tokenizer.eos_token
-    }
+ds = prepare_dataset(
+    dataset, tokenizer, script_args.train_on_response, script_args.separator
+)
+collator = DataCollatorForLanguageModeling(tokenizer=tokenizer)
 
-
-ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
-# collator = DataCollatorForCompletionOnlyLM(
-#     response_template="</score><|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
-#     tokenizer=tokenizer,
-# )
-
-trainer = SFTTrainer(
+trainer = Trainer(
     model=model,
     tokenizer=tokenizer,
     train_dataset=ds,
     args=training_args,
-    dataset_text_field="text",
-    max_seq_length=script_args.max_length,
-    packing=True,
-    # data_collator=collator,
-    # dataset_num_proc=os.cpu_count(),
+    data_collator=collator,
 )
 
 trainer.train()

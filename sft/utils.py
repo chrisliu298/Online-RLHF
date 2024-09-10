@@ -62,6 +62,6 @@ def prepare_dataset(
                 return i
         return -1
 
-    return dataset.map(
-        tokenize_function, remove_columns=dataset.column_names, num_proc=os.cpu_count()
+    return dataset.map(tokenize_function, num_proc=os.cpu_count()).select_columns(
+        ["input_ids", "attention_mask", "labels"]
     )

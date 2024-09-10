@@ -11,7 +11,7 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
 )
-from trl import SFTTrainer
+from trl import DataCollatorForCompletionOnlyLM, SFTTrainer
 
 
 # Define and parse arguments.
@@ -151,10 +151,9 @@ def formatting_prompts_func(example):
 
 
 ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
-# collator = DataCollatorForCompletionOnlyLM(
-#     response_template="</score><|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n",
-#     tokenizer=tokenizer,
-# )
+collator = DataCollatorForCompletionOnlyLM(
+    response_template="[RESPONSE]", tokenizer=tokenizer
+)
 
 trainer = SFTTrainer(
     model=model,
@@ -163,9 +162,8 @@ trainer = SFTTrainer(
     args=training_args,
     dataset_text_field="text",
     max_seq_length=script_args.max_length,
-    packing=True,
-    # data_collator=collator,
-    # dataset_num_proc=os.cpu_count(),
+    packing=False,
+    data_collator=collator,
 )
 
 trainer.train()

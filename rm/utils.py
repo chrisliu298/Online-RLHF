@@ -330,15 +330,13 @@ class RewardTrainer(Trainer):
             )
         elif self.loss_type == "focal_penalty":
             margin_prob = torch.sigmoid(rewards_j - rewards_k)
+            zeros = torch.zeros_like(margin_prob)
+            # Stack in the 0th dimension
+            margin_prob_zeros = torch.cat([margin_prob, zeros], dim=0)
             ranking_loss = (
-                -(
-                    (
-                        1 - 2 * max(torch.zeros_like(margin_prob), margin_prob - 0.5)
-                    ).mean()
-                    ** self.gamma
-                )
-                * torch.log(margin_prob).mean()
-            )
+                -((1 - 2 * torch.max(margin_prob_zeros, dim=0).values) ** self.gamma)
+                * torch.log(margin_prob)
+            ).mean()
             penalty_j = -(torch.log(rewards_j + 5) + torch.log(5 - rewards_j)).mean()
             penalty_k = -(torch.log(rewards_k + 5) + torch.log(5 - rewards_k)).mean()
             loss = ranking_loss + self.lambd * penalty_j + self.lambd * penalty_k

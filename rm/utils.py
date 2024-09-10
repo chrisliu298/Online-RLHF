@@ -146,8 +146,11 @@ def build_dataset(tokenizer, train_path):
 
 def build_dataset_local(tokenizer, train_path, tokenize=True, special_token=""):
     def tokenize_func(sample):
-        sample["positive"] = tokenizer.apply_chat_template(
-            sample["chosen"], tokenize=False, add_generation_prompt=False
+        sample["positive"] = (
+            tokenizer.apply_chat_template(
+                sample["chosen"], tokenize=False, add_generation_prompt=False
+            )
+            + special_token
         )
         sample["negative"] = (
             tokenizer.apply_chat_template(

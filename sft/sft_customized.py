@@ -146,7 +146,7 @@ if script_args.use_chat_template:
 
 
 ds = prepare_dataset(dataset, tokenizer, script_args.train_on_response, separator)
-collator = DataCollatorForLanguageModeling(tokenizer=tokenizer)
+collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
 
 trainer = Trainer(
     model=model,

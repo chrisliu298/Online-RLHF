@@ -7,12 +7,11 @@ from datasets import load_from_disk
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
-    DataCollatorWithPadding,
     HfArgumentParser,
     Trainer,
     TrainingArguments,
 )
-from utils import prepare_dataset
+from utils import SFTDataCollatorWithPadding, prepare_dataset
 
 
 # Define and parse arguments.
@@ -141,7 +140,9 @@ else:
     tokenizer.chat_template = ""
 
 ds = prepare_dataset(dataset, tokenizer, script_args.train_on_response, separator)
-collator = DataCollatorWithPadding(tokenizer=tokenizer)
+collator = SFTDataCollatorWithPadding(
+    tokenizer=tokenizer, padding="longest", max_length=script_args.max_length
+)
 
 trainer = Trainer(
     model=model,

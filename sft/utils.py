@@ -1,4 +1,9 @@
 import os
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Union
+
+import torch
+from transformers import AutoTokenizer, PaddingStrategy
 
 
 def prepare_dataset(
@@ -66,3 +71,34 @@ def prepare_dataset(
     return dataset.map(tokenize_function, num_proc=os.cpu_count()).select_columns(
         ["input_ids", "attention_mask", "labels"]
     )
+
+
+@dataclass
+class SFTDataCollatorWithPadding:
+    tokenizer: AutoTokenizer
+    padding: Union[bool, str, PaddingStrategy] = True
+    max_length: Optional[int] = None
+    pad_to_multiple_of: Optional[int] = None
+    return_tensors: str = "pt"
+
+    def __call__(self, features: List[Dict[str, Any]]) -> Dict[str, Any]:
+        batch = self.tokenizer.pad(
+            features,
+            padding=self.padding,
+            max_length=self.max_length,
+            pad_to_multiple_of=self.pad_to_multiple_of,
+            return_tensors=self.return_tensors,
+        )
+
+        if "labels" in batch:
+            # Replace padding token id in the labels by -100
+            batch["labels"] = [
+                [
+                    (label if label != self.tokenizer.pad_token_id else -100)
+                    for label in labels
+                ]
+                for labels in batch["labels"]
+            ]
+            batch["labels"] = torch.tensor(batch["labels"])
+
+        return batch

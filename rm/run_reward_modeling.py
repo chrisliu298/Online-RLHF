@@ -16,6 +16,7 @@ from utils import (
     build_dataset_local,
     check_valid_checkpoint,
     compute_metrics,
+    special_tokens,
 )
 
 
@@ -113,6 +114,9 @@ class ScriptArguments:
     use_liger_kernel: Optional[bool] = field(
         default=False, metadata={"help": "Use liger kernel"}
     )
+    append_special_token: Optional[bool] = field(
+        default=False, metadata={"help": "Append special token to the end of the input"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -130,8 +134,12 @@ tokenizer.model_max_length = script_args.max_length
 # Get the dataset
 train_path = script_args.train_set_path
 if script_args.load_data_from_local:
+    special_token = special_tokens[script_args.model_name.split("/")[-1]]
     train_dataset = build_dataset_local(
-        tokenizer, train_path, tokenize=script_args.tokenize_train
+        tokenizer,
+        train_path,
+        tokenize=script_args.tokenize_train,
+        special_token=special_token,
     )
 
 else:

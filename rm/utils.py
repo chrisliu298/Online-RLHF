@@ -9,6 +9,11 @@ from datasets import load_dataset, load_from_disk
 from transformers import AutoTokenizer, Trainer
 from transformers.utils import PaddingStrategy
 
+special_tokens = {
+    "gemma-2-27b-it": "<unused0>",
+    "Meta-Llama-3.1-8B-Instruct": "<|reserved_special_token_0|>",
+}
+
 
 def check_valid_checkpoint(base_path, world_size):
     # Define common static files and rng state files
@@ -139,7 +144,7 @@ def build_dataset(tokenizer, train_path):
     return dataset
 
 
-def build_dataset_local(tokenizer, train_path, tokenize=True):
+def build_dataset_local(tokenizer, train_path, tokenize=True, special_token=None):
     def format_conversation(conversation):
         conv = ""
         roles = {"user": "User: ", "assistant": "Assistant: "}
@@ -150,11 +155,21 @@ def build_dataset_local(tokenizer, train_path, tokenize=True):
         return conv
 
     def tokenize_func(sample):
-        sample["positive"] = tokenizer.apply_chat_template(
-            sample["chosen"], tokenize=False, add_generation_prompt=False
+        sample["positive"] = (
+            tokenizer.apply_chat_template(
+                sample["chosen"], tokenize=False, add_generation_prompt=False
+            )
+            + special_token
+            if special_token is not None
+            else ""
         )
-        sample["negative"] = tokenizer.apply_chat_template(
-            sample["rejected"], tokenize=False, add_generation_prompt=False
+        sample["negative"] = (
+            tokenizer.apply_chat_template(
+                sample["rejected"], tokenize=False, add_generation_prompt=False
+            )
+            + special_token
+            if special_token is not None
+            else ""
         )
 
         if tokenizer.bos_token is not None:

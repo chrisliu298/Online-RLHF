@@ -45,7 +45,11 @@ def prepare_dataset(
                 labels = [-100] * len(tokenized["input_ids"])
 
         tokenized["labels"] = labels
-        return tokenized
+        return {
+            "input_ids": tokenized["input_ids"],
+            "attention_mask": tokenized["attention_mask"],
+            "labels": labels,
+        }
 
     def find_subsequence(seq, subseq):
         n, m = len(seq), len(subseq)
@@ -54,4 +58,4 @@ def prepare_dataset(
                 return i
         return -1
 
-    return dataset.map(tokenize_function)
+    return dataset.map(tokenize_function, remove_columns=dataset.column_names)

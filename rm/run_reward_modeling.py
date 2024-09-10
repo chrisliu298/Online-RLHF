@@ -136,7 +136,7 @@ train_path = script_args.train_set_path
 if script_args.load_data_from_local:
     special_token = (
         special_tokens[script_args.model_name.split("/")[-1]]
-        if script_args.model_name in special_tokens
+        if script_args.append_special_token
         else None
     )
     train_dataset = build_dataset_local(

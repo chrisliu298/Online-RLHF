@@ -240,6 +240,7 @@ class RewardTrainer(Trainer):
         log_t=1.0,
         gamma=0.0,
         margin=1.0,
+        lambd=0.0,
         log_reward=False,
         *args,
         **kwargs,
@@ -261,6 +262,7 @@ class RewardTrainer(Trainer):
         self.loss_type = loss_type
         self.log_t = log_t
         self.gamma = gamma
+        self.lambd = lambd
         self.margin = margin
         self.log_reward = log_reward
 
@@ -310,6 +312,15 @@ class RewardTrainer(Trainer):
                 -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
                 * (1 - torch.sigmoid(rewards_j - rewards_k)).mean() ** self.gamma
             )
+        elif self.loss_type == "focal_penalty":
+            margin_prob = torch.sigmoid(rewards_j - rewards_k)
+            ranking_loss = -(
+                (1 - 2 * max(torch.zeros_like(margin_prob), margin_prob - 0.5)).mean()
+                ** self.gamma
+            ) * torch.log(margin_prob)
+            penalty_j = -(torch.log(rewards_j + 5) + torch.log(5 - rewards_j)).mean()
+            penalty_k = -(torch.log(rewards_k + 5) + torch.log(5 - rewards_k)).mean()
+            loss = ranking_loss + self.lambd * penalty_j + self.lambd * penalty_k
         elif self.loss_type == "hinge":
             loss = torch.relu(self.margin - (rewards_j - rewards_k)).mean()
         elif self.loss_type == "margin_mse":

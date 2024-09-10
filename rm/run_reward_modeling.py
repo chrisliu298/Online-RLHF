@@ -94,6 +94,9 @@ class ScriptArguments:
     gamma: Optional[float] = field(
         default=0.0, metadata={"help": "The gamma for the t-logarithm"}
     )
+    lambd: Optional[float] = field(
+        default=0.0, metadata={"help": "The lambda for the focal penalty loss"}
+    )
     margin: Optional[float] = field(
         default=0.0, metadata={"help": "The margin for the hinge loss"}
     )

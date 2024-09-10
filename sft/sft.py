@@ -146,7 +146,9 @@ def formatting_prompts_func(example):
             example["messages"], tokenize=False
         ).replace(tokenizer.bos_token, "")
         if tokenizer.chat_template != ""
-        else example["messages"][0]["content"] + example["messages"][1]["content"]
+        else example["messages"][0]["content"]
+        + example["messages"][1]["content"]
+        + tokenizer.eos_token
     }
 
 

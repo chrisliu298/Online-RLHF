@@ -48,7 +48,8 @@ def prepare_dataset(
             else:
                 labels = [-100] * len(tokenized["input_ids"])
 
-        tokenized["labels"] = labels
+        labels = [label for label in labels]
+
         return {
             "input_ids": tokenized["input_ids"],
             "attention_mask": tokenized["attention_mask"],

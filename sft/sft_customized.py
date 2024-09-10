@@ -130,6 +130,9 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
     model.config.pad_token_id = tokenizer.pad_token_id
 tokenizer.model_max_length = script_args.max_length
+tokenizer.padding_side = "right"
+tokenizer.truncation_side = "right"
+
 separator = None
 if "-Instruct" in script_args.model_name:
     tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]

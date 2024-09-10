@@ -258,6 +258,7 @@ class RewardTrainer(Trainer):
             "sim",
             "sim_per_layer",
             "bt_per_layer",
+            "focal_penalty",
         }, f"Invalid loss type: {loss_type}"
         self.loss_type = loss_type
         self.log_t = log_t

@@ -211,7 +211,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
 model.config.use_cache = not script_args.gradient_checkpointing
 if script_args.add_padding_token:
     model.config.pad_token_id = tokenizer.pad_token_id
-    if script_args.model_name in {
+    if script_args.model_name.split("/")[-1] in {
         "Meta-Llama-3-8B-Instruct",
         "Meta-Llama-3.1-8B-Instruct",
     }:

@@ -21,7 +21,7 @@ def prepare_dataset(
             )
         if separator is None:
             full_prompt = "".join(msg["content"] for msg in example["messages"])
-            tokenized = tokenizer(full_prompt)
+            tokenized = tokenizer(full_prompt, truncation=True)
 
             if train_on_response:
                 user_token_count = len(
@@ -36,7 +36,7 @@ def prepare_dataset(
             formatted_prompt = tokenizer.apply_chat_template(
                 example["messages"], tokenize=False
             ).replace(tokenizer.bos_token, "")
-            tokenized = tokenizer(formatted_prompt)
+            tokenized = tokenizer(formatted_prompt, truncation=True)
 
             separator_tokens = tokenizer.encode(separator, add_special_tokens=False)
             separator_index = find_subsequence(tokenized["input_ids"], separator_tokens)

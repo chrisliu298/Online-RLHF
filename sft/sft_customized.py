@@ -82,10 +82,6 @@ class ScriptArguments:
             You may need this if the model that you want to train doesn't fit on a single GPU."
         },
     )
-    use_chat_template: Optional[bool] = field(
-        default=False,
-        metadata={"help": "Use chat template for SFT."},
-    )
     train_on_response: Optional[bool] = field(
         default=False,
         metadata={"help": "Train on response only."},
@@ -140,10 +136,6 @@ if "-Instruct" in script_args.model_name:
     separator = "</score><|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
 else:
     tokenizer.chat_template = ""
-
-if script_args.use_chat_template:
-    tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
-
 
 ds = prepare_dataset(dataset, tokenizer, script_args.train_on_response, separator)
 collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)

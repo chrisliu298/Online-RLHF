@@ -15,9 +15,10 @@ def prepare_dataset(
     """
 
     def tokenize_function(example):
-        example["messages"][-1]["content"] = (
-            example["messages"][-1]["content"] + tokenizer.eos_token
-        )
+        if separator is None:
+            example["messages"][-1]["content"] = (
+                example["messages"][-1]["content"] + tokenizer.eos_token
+            )
         if separator is None:
             full_prompt = "".join(msg["content"] for msg in example["messages"])
             tokenized = tokenizer(full_prompt)

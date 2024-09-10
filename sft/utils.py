@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
 import torch
-from transformers import AutoTokenizer, PaddingStrategy
+from transformers import AutoTokenizer
 
 
 def prepare_dataset(
@@ -76,7 +76,7 @@ def prepare_dataset(
 @dataclass
 class SFTDataCollatorWithPadding:
     tokenizer: AutoTokenizer
-    padding: Union[bool, str, PaddingStrategy] = True
+    padding: Union[bool, str] = True
     max_length: Optional[int] = None
     pad_to_multiple_of: Optional[int] = None
     return_tensors: str = "pt"

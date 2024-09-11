@@ -131,9 +131,6 @@ if tokenizer.pad_token is None:
 tokenizer.model_max_length = script_args.max_length
 if "-Instruct" in script_args.model_name or "-it" in script_args.model_name:
     tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]
-    response_template_ids = [198, 58, 5045, 3931, 2891, 37001, 60]
-else:
-    tokenizer.chat_template = ""
     response_template_ids = [
         128006,
         78191,
@@ -146,6 +143,9 @@ else:
         37001,
         60,
     ]
+else:
+    tokenizer.chat_template = ""
+    response_template_ids = [198, 58, 5045, 3931, 2891, 37001, 60]
 
 if script_args.use_chat_template:
     tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"

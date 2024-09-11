@@ -85,6 +85,10 @@ class ScriptArguments:
         default=False,
         metadata={"help": "Use chat template for SFT."},
     )
+    response_template: Optional[str] = field(
+        default=None,
+        metadata={"help": "Response template for SFT."},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -152,7 +156,7 @@ def formatting_prompts_func(example):
 
 ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
 collator = DataCollatorForCompletionOnlyLM(
-    response_template="<|start_header_id|>assistant<|end_header_id|>\n\n",
+    response_template=script_args.response_template,
     tokenizer=tokenizer,
 )
 

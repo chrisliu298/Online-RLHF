@@ -3,7 +3,6 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import torch
-from chat_templates import chat_templates
 from datasets import load_from_disk
 from transformers import (
     AutoModelForCausalLM,
@@ -70,20 +69,8 @@ class ScriptArguments:
     )
     max_length: Optional[int] = field(default=4096)
     output_dir: Optional[str] = field(default="./models/sft_model_llama3")
-    use_liger_kernel: Optional[bool] = field(
-        default=False,
-        metadata={"help": "Use liger kernel for faster training."},
-    )
-    deepspeed: Optional[str] = field(
-        default=None,
-        metadata={
-            "help": "Path to deepspeed config if using deepspeed. \
-            You may need this if the model that you want to train doesn't fit on a single GPU."
-        },
-    )
-    use_chat_template: Optional[bool] = field(
-        default=False,
-        metadata={"help": "Use chat template for SFT."},
+    response_template: Optional[str] = field(
+        default=None, metadata={"help": "The response template to use."}
     )
 
 
@@ -109,8 +96,6 @@ training_args = TrainingArguments(
     lr_scheduler_type=script_args.lr_scheduler_type,
     warmup_ratio=0.03,
     report_to="wandb",
-    use_liger_kernel=script_args.use_liger_kernel,
-    deepspeed=script_args.deepspeed,
 )
 
 
@@ -129,26 +114,6 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
     model.config.pad_token_id = tokenizer.pad_token_id
 tokenizer.model_max_length = script_args.max_length
-if "-Instruct" in script_args.model_name or "-it" in script_args.model_name:
-    tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]
-    response_template_ids = [
-        128006,
-        78191,
-        128007,
-        271,
-        58,
-        5045,
-        3931,
-        2891,
-        37001,
-        60,
-    ]
-else:
-    tokenizer.chat_template = ""
-    response_template_ids = [198, 58, 5045, 3931, 2891, 37001, 60]
-
-if script_args.use_chat_template:
-    tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
 
 
 def formatting_prompts_func(example):
@@ -156,15 +121,13 @@ def formatting_prompts_func(example):
         "text": tokenizer.apply_chat_template(
             example["messages"], tokenize=False
         ).replace(tokenizer.bos_token, "")
-        if tokenizer.chat_template != ""
-        else example["messages"][0]["content"]
-        + example["messages"][1]["content"]
-        + tokenizer.eos_token
     }
 
 
 ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
-collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
+collator = DataCollatorForCompletionOnlyLM(
+    response_template_ids=script_args.response_template, tokenizer=tokenizer
+)
 
 trainer = SFTTrainer(
     model=model,

@@ -136,7 +136,7 @@ def formatting_prompts_func(example):
 ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
 eval_ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
 collator = DataCollatorForCompletionOnlyLM(
-    response_template_ids=script_args.response_template, tokenizer=tokenizer
+    response_template=script_args.response_template, tokenizer=tokenizer
 )
 
 trainer = SFTTrainer(

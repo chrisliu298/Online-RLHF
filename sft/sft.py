@@ -4,6 +4,7 @@ from typing import Optional
 
 import torch
 from datasets import load_from_disk
+from peft import LoraConfig, get_peft_model
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -80,6 +81,10 @@ class ScriptArguments:
     )
     eval_steps: Optional[int] = field(default=1000)
     deepspeed: Optional[str] = field(default=None)
+    use_lora: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Whether to use LoRA for training"},
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -120,6 +125,19 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.bfloat16,
     attn_implementation="flash_attention_2",
 )
+
+if script_args.use_lora:
+    # Configure LoRA
+    lora_config = LoraConfig(
+        r=16,
+        lora_alpha=16,
+        target_modules=["q_proj", "k_proj", "v_proj", "o_proj"],
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
+    model = get_peft_model(model, lora_config)
+
 tokenizer = AutoTokenizer.from_pretrained(script_args.model_name)
 if tokenizer.pad_token is None:
     tokenizer.pad_token = "<|finetune_right_pad_id|>"

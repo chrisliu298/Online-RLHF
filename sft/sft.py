@@ -79,6 +79,7 @@ class ScriptArguments:
         default=None, metadata={"help": "The response template to use."}
     )
     eval_steps: Optional[int] = field(default=1000)
+    deepspeed: Optional[str] = field(default=None)
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -105,6 +106,7 @@ training_args = TrainingArguments(
     report_to="wandb",
     eval_strategy="steps",
     eval_steps=script_args.eval_steps,
+    deepspeed=script_args.deepspeed,
 )
 
 

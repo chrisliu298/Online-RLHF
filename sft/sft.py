@@ -42,6 +42,12 @@ class ScriptArguments:
             "help": "",
         },
     )
+    eval_dataset_name: Optional[str] = field(
+        default="RLHFlow/SFT-OpenHermes-2.5-Standard",
+        metadata={
+            "help": "",
+        },
+    )
     bf16: Optional[bool] = field(
         default=True,
         metadata={
@@ -72,6 +78,7 @@ class ScriptArguments:
     response_template: Optional[str] = field(
         default=None, metadata={"help": "The response template to use."}
     )
+    eval_steps: Optional[int] = field(default=1000)
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -96,6 +103,8 @@ training_args = TrainingArguments(
     lr_scheduler_type=script_args.lr_scheduler_type,
     warmup_ratio=0.03,
     report_to="wandb",
+    eval_strategy="steps",
+    eval_steps=script_args.eval_steps,
 )
 
 
@@ -125,6 +134,7 @@ def formatting_prompts_func(example):
 
 
 ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
+eval_ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
 collator = DataCollatorForCompletionOnlyLM(
     response_template_ids=script_args.response_template, tokenizer=tokenizer
 )
@@ -133,6 +143,7 @@ trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
     train_dataset=ds,
+    eval_dataset=eval_ds,
     args=training_args,
     dataset_text_field="text",
     max_seq_length=script_args.max_length,

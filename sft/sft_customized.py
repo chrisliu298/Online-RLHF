@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -8,10 +9,9 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
-    Trainer,
     TrainingArguments,
 )
-from utils import SFTDataCollatorWithPadding, prepare_dataset
+from trl import DataCollatorForCompletionOnlyLM, SFTTrainer
 
 
 # Define and parse arguments.
@@ -81,9 +81,9 @@ class ScriptArguments:
             You may need this if the model that you want to train doesn't fit on a single GPU."
         },
     )
-    train_on_response: Optional[bool] = field(
+    use_chat_template: Optional[bool] = field(
         default=False,
-        metadata={"help": "Train on response only."},
+        metadata={"help": "Use chat template for SFT."},
     )
 
 
@@ -129,26 +129,51 @@ if tokenizer.pad_token is None:
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
     model.config.pad_token_id = tokenizer.pad_token_id
 tokenizer.model_max_length = script_args.max_length
-tokenizer.padding_side = "right"
-tokenizer.truncation_side = "right"
-
-separator = None
-if "-Instruct" in script_args.model_name:
+if "-Instruct" in script_args.model_name or "-it" in script_args.model_name:
     tokenizer.chat_template = chat_templates[script_args.model_name.split("/")[-1]]
-    separator = "</score><|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n"
+    response_template_ids = [
+        128006,
+        78191,
+        128007,
+        271,
+        58,
+        5045,
+        3931,
+        2891,
+        37001,
+        60,
+    ]
 else:
     tokenizer.chat_template = ""
+    response_template_ids = [198, 58, 5045, 3931, 2891, 37001, 60]
 
-ds = prepare_dataset(dataset, tokenizer, script_args.train_on_response, separator)
-collator = SFTDataCollatorWithPadding(
-    tokenizer=tokenizer, padding="longest", max_length=script_args.max_length
-)
+if script_args.use_chat_template:
+    tokenizer.chat_template = "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ message['content'] | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
 
-trainer = Trainer(
+
+def formatting_prompts_func(example):
+    return {
+        "text": tokenizer.apply_chat_template(
+            example["messages"], tokenize=False
+        ).replace(tokenizer.bos_token, "")
+        if tokenizer.chat_template != ""
+        else example["messages"][0]["content"]
+        + example["messages"][1]["content"]
+        + tokenizer.eos_token
+    }
+
+
+ds = dataset.map(formatting_prompts_func, num_proc=os.cpu_count())
+collator = DataCollatorForCompletionOnlyLM(response_template_ids, tokenizer=tokenizer)
+
+trainer = SFTTrainer(
     model=model,
     tokenizer=tokenizer,
     train_dataset=ds,
     args=training_args,
+    dataset_text_field="text",
+    max_seq_length=script_args.max_length,
+    packing=False,
     data_collator=collator,
 )
 

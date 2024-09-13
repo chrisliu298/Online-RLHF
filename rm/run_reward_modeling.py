@@ -80,9 +80,6 @@ class ScriptArguments:
     logging_steps: Optional[int] = field(
         default=1, metadata={"help": "The logging steps"}
     )
-    add_padding_token: Optional[bool] = field(
-        default=False, metadata={"help": "Add padding token"}
-    )
     tokenize_train: Optional[bool] = field(
         default=False,
         metadata={"help": "Tokenize the training data"},
@@ -125,8 +122,8 @@ script_args = parser.parse_args_into_dataclasses()[0]
 tokenizer_name = script_args.model_name
 tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
 
-if script_args.add_padding_token:
-    tokenizer.add_special_tokens({"pad_token": "[PAD]"})
+if "Meta-Llama-3.1-8B-Instruct" in script_args.model_name:
+    tokenizer.pad_token = "<|finetune_right_pad_id|>"
 tokenizer.truncation_side = "left"
 tokenizer.model_max_length = script_args.max_length
 
@@ -209,13 +206,8 @@ model = AutoModelForSequenceClassification.from_pretrained(
     else False,
 )
 model.config.use_cache = not script_args.gradient_checkpointing
-if script_args.add_padding_token:
+if "Meta-Llama-3.1-8B-Instruct" in script_args.model_name:
     model.config.pad_token_id = tokenizer.pad_token_id
-    if script_args.model_name.split("/")[-1] in {
-        "Meta-Llama-3-8B-Instruct",
-        "Meta-Llama-3.1-8B-Instruct",
-    }:
-        model.resize_token_embeddings(len(tokenizer))
 
 trainer = RewardTrainer(
     model=model,

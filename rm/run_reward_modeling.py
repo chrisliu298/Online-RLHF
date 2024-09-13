@@ -107,7 +107,7 @@ class ScriptArguments:
         default="", metadata={"help": "Append special token to the end of the input"}
     )
     resume_from_checkpoint: Optional[bool] = field(
-        default=None, metadata={"help": "Resume from checkpoint"}
+        default=False, metadata={"help": "Resume from checkpoint"}
     )
 
 
@@ -190,6 +190,6 @@ trainer = RewardTrainer(
     margin=script_args.margin,
     log_reward=script_args.log_reward,
 )
-trainer.train(resume_from_checkpoint=script_args.resume_from_checkpoint)
+trainer.train(resume_from_checkpoint=script_args.resume_from_checkpoint or None)
 trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)

@@ -1,5 +1,4 @@
 import os
-import shutil
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -14,7 +13,6 @@ from utils import (
     RewardDataCollatorWithPadding,
     RewardTrainer,
     build_dataset_local,
-    check_valid_checkpoint,
     compute_metrics,
 )
 
@@ -154,21 +152,11 @@ if script_args.checkpoint_dir and os.path.exists(script_args.checkpoint_dir):
         key=lambda x: int(x.split("-")[-1]),
         reverse=True,
     )
-    for checkpoint in checkpoints:
-        path = os.path.join(script_args.checkpoint_dir, checkpoint)
-        if check_valid_checkpoint(path, int(os.environ["WORLD_SIZE"]) * 1):
-            resume_from_checkpoint = path
-            break
-        else:
-            if os.path.exists(path):
-                shutil.rmtree(path)
-
-    if resume_from_checkpoint and len(checkpoints) > 1:
-        for old_checkpoint in checkpoints:
-            old_path = os.path.join(script_args.checkpoint_dir, old_checkpoint)
-            if old_path != resume_from_checkpoint:
-                if os.path.exists(old_path):
-                    shutil.rmtree(old_path)
+    if checkpoints:
+        latest_checkpoint = checkpoints[0]
+        resume_from_checkpoint = os.path.join(
+            script_args.checkpoint_dir, latest_checkpoint
+        )
 
 # Define the trainer
 training_args = TrainingArguments(

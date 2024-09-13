@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -95,10 +94,6 @@ class ScriptArguments:
     margin: Optional[float] = field(
         default=0.0, metadata={"help": "The margin for the hinge loss"}
     )
-    checkpoint_dir: Optional[str] = field(
-        default=None,
-        metadata={"help": "Directory to check for existing checkpoints"},
-    )
     log_reward: Optional[bool] = field(
         default=False, metadata={"help": "Log reward during training"}
     )
@@ -110,6 +105,9 @@ class ScriptArguments:
     )
     special_token: Optional[str] = field(
         default="", metadata={"help": "Append special token to the end of the input"}
+    )
+    resume_from_checkpoint: Optional[bool] = field(
+        default=None, metadata={"help": "Resume from checkpoint"}
     )
 
 
@@ -140,24 +138,6 @@ else:
 
 print("Training set:", len(train_dataset))
 
-# Check for existing checkpoint
-resume_from_checkpoint = None
-if script_args.checkpoint_dir and os.path.exists(script_args.checkpoint_dir):
-    checkpoints = sorted(
-        [
-            d
-            for d in os.listdir(script_args.checkpoint_dir)
-            if d.startswith("checkpoint-")
-        ],
-        key=lambda x: int(x.split("-")[-1]),
-        reverse=True,
-    )
-    if checkpoints:
-        latest_checkpoint = checkpoints[0]
-        resume_from_checkpoint = os.path.join(
-            script_args.checkpoint_dir, latest_checkpoint
-        )
-
 # Define the trainer
 training_args = TrainingArguments(
     output_dir=script_args.output_dir,
@@ -180,7 +160,6 @@ training_args = TrainingArguments(
     warmup_steps=script_args.warmup_steps,
     report_to="wandb",
     run_name=script_args.run_name,
-    resume_from_checkpoint=resume_from_checkpoint,
     save_total_limit=script_args.save_total_limit,
     use_liger_kernel=script_args.use_liger_kernel,
 )
@@ -211,9 +190,6 @@ trainer = RewardTrainer(
     margin=script_args.margin,
     log_reward=script_args.log_reward,
 )
-trainer.train(resume_from_checkpoint=resume_from_checkpoint)
+trainer.train(resume_from_checkpoint=script_args.resume_from_checkpoint)
 trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)
-if script_args.checkpoint_dir:
-    checkpoint_dirs = os.path.join(script_args.output_dir, "checkpoint-*")
-    os.system(f"rm -rf {checkpoint_dirs}")

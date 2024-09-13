@@ -197,8 +197,12 @@ trainer = RewardTrainer(
     margin=script_args.margin,
     log_reward=script_args.log_reward,
 )
-trainer.train(
-    resume_from_checkpoint=True if script_args.resume_from_checkpoint else None
-)
+try:
+    trainer.train(
+        resume_from_checkpoint=True if script_args.resume_from_checkpoint else None
+    )
+except ValueError:
+    print("No checkpoint to resume from, starting from scratch.")
+    trainer.train()
 trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)

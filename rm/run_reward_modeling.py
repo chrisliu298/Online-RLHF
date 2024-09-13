@@ -176,9 +176,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
     else False,
 )
 if script_args.reward_head_init_value is not None:
-    torch.nn.init.constant_(
-        model.reward_head.weight, script_args.reward_head_init_value
-    )
+    torch.nn.init.constant_(model.score.weight, script_args.reward_head_init_value)
 model.config.use_cache = not script_args.gradient_checkpointing
 if "Meta-Llama-3.1-8B-Instruct" in script_args.model_name:
     model.config.pad_token_id = tokenizer.pad_token_id

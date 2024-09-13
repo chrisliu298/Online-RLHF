@@ -109,6 +109,9 @@ class ScriptArguments:
     resume_from_checkpoint: Optional[bool] = field(
         default=False, metadata={"help": "Resume from checkpoint"}
     )
+    reward_head_init_value: Optional[float] = field(
+        default=None, metadata={"help": "The initial value for the reward head"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -172,6 +175,10 @@ model = AutoModelForSequenceClassification.from_pretrained(
     if script_args.loss_type in {"sim", "sim_per_layer", "bt_per_layer"}
     else False,
 )
+if script_args.reward_head_init_value is not None:
+    torch.nn.init.constant_(
+        model.reward_head.weight, script_args.reward_head_init_value
+    )
 model.config.use_cache = not script_args.gradient_checkpointing
 if "Meta-Llama-3.1-8B-Instruct" in script_args.model_name:
     model.config.pad_token_id = tokenizer.pad_token_id

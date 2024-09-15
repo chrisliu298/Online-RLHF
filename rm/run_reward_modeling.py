@@ -112,6 +112,9 @@ class ScriptArguments:
     reward_head_init_value: Optional[float] = field(
         default=None, metadata={"help": "The initial value for the reward head"}
     )
+    neftune_noise_alpha: Optional[float] = field(
+        default=None, metadata={"help": "The noise alpha for neftune"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -165,6 +168,7 @@ training_args = TrainingArguments(
     run_name=script_args.run_name,
     save_total_limit=script_args.save_total_limit,
     use_liger_kernel=script_args.use_liger_kernel,
+    neftune_noise_alpha=script_args.neftune_noise_alpha,
 )
 model = AutoModelForSequenceClassification.from_pretrained(
     script_args.model_name,

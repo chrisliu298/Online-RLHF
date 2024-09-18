@@ -1,3 +1,5 @@
+import json
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -208,3 +210,6 @@ except ValueError:
     trainer.train()
 trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)
+# Save script args
+with open(os.path.join(script_args.output_dir, "script_args.json"), "w") as f:
+    json.dump(script_args.__dict__, f)

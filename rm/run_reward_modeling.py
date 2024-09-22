@@ -168,7 +168,7 @@ training_args = TrainingArguments(
     optim=script_args.optim,
     lr_scheduler_type=script_args.lr_scheduler_type
     if "schedule_free" not in script_args.optim
-    else None,
+    else "linear",
     warmup_ratio=script_args.warmup_ratio,
     warmup_steps=script_args.warmup_steps,
     report_to="wandb",

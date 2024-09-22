@@ -166,7 +166,9 @@ training_args = TrainingArguments(
     logging_strategy="steps",
     logging_steps=script_args.logging_steps,
     optim=script_args.optim,
-    lr_scheduler_type=script_args.lr_scheduler_type,
+    lr_scheduler_type=script_args.lr_scheduler_type
+    if "schedule_free" not in script_args.optim
+    else None,
     warmup_ratio=script_args.warmup_ratio,
     warmup_steps=script_args.warmup_steps,
     report_to="wandb",

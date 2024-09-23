@@ -324,9 +324,9 @@ class RewardTrainer(Trainer):
                 -((1 - 2 * torch.max(margin_prob_zeros, dim=0).values) ** self.gamma)
                 * torch.log(margin_prob)
             ).mean()
-            penalty_j = -(torch.log(rewards_j + 5) + torch.log(5 - rewards_j)).mean()
-            penalty_k = -(torch.log(rewards_k + 5) + torch.log(5 - rewards_k)).mean()
-            loss = ranking_loss + self.lambd * penalty_j + self.lambd * penalty_k
+            # penalty_j = -(torch.log(rewards_j + 5) + torch.log(5 - rewards_j)).mean()
+            # penalty_k = -(torch.log(rewards_k + 5) + torch.log(5 - rewards_k)).mean()
+            loss = ranking_loss  # + self.lambd * penalty_j + self.lambd * penalty_k
         elif self.loss_type == "hinge":
             loss = torch.relu(self.margin - (rewards_j - rewards_k)).mean()
         elif self.loss_type == "margin_mse":

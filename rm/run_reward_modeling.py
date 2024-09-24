@@ -128,7 +128,7 @@ tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
 
 if (
     "Meta-Llama-3.1-8B-Instruct" in script_args.model_name
-    or "MagpieLM-8B-Chat-v0.1" in script_args.model_name
+    or "Qwen2.5-32B-Instruct" in script_args.model_name
 ):
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
 tokenizer.truncation_side = "left"
@@ -191,7 +191,7 @@ if script_args.reward_head_init_value is not None:
 model.config.use_cache = not script_args.gradient_checkpointing
 if (
     "Meta-Llama-3.1-8B-Instruct" in script_args.model_name
-    or "MagpieLM-8B-Chat-v0.1" in script_args.model_name
+    or "Qwen2.5-32B-Instruct" in script_args.model_name
 ):
     model.config.pad_token_id = tokenizer.pad_token_id
 

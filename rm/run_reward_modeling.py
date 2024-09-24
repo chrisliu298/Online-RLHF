@@ -126,10 +126,7 @@ script_args = parser.parse_args_into_dataclasses()[0]
 tokenizer_name = script_args.model_name
 tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
 
-if (
-    "Meta-Llama-3.1-8B-Instruct" in script_args.model_name
-    or "Qwen2.5-32B-Instruct" in script_args.model_name
-):
+if "Meta-Llama-3.1-8B-Instruct" in script_args.model_name:
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
 tokenizer.truncation_side = "left"
 tokenizer.model_max_length = script_args.max_length

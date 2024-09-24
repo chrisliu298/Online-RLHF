@@ -124,7 +124,9 @@ script_args = parser.parse_args_into_dataclasses()[0]
 
 # Load the value-head model and tokenizer.
 tokenizer_name = script_args.model_name
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_name, use_fast=True)
+tokenizer = AutoTokenizer.from_pretrained(
+    tokenizer_name, use_fast=True, trust_remote_code=True
+)
 
 if (
     "Meta-Llama-3.1-8B-Instruct" in script_args.model_name
@@ -185,6 +187,7 @@ model = AutoModelForSequenceClassification.from_pretrained(
     output_hidden_states=True
     if script_args.loss_type in {"sim", "sim_per_layer", "bt_per_layer"}
     else False,
+    trust_remote_code=True,
 )
 if script_args.reward_head_init_value is not None:
     torch.nn.init.constant_(model.score.weight, script_args.reward_head_init_value)

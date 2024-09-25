@@ -181,6 +181,8 @@ training_args = TrainingArguments(
     save_total_limit=script_args.save_total_limit,
     use_liger_kernel=script_args.use_liger_kernel,
     neftune_noise_alpha=script_args.neftune_noise_alpha,
+    eval_strategy="steps",
+    eval_steps=script_args.save_steps,
 )
 model = AutoModelForSequenceClassification.from_pretrained(
     script_args.model_name,

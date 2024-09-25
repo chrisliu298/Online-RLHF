@@ -203,6 +203,7 @@ trainer = RewardTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
+    eval_dataset=train_dataset.select(range(128)),
     compute_metrics=compute_metrics,
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length

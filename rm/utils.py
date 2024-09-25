@@ -224,6 +224,9 @@ def compute_metrics(eval_pred):
     result["accuracy"] = np.sum(pos_predictions_scores > neg_predictions_scores) / len(
         pos_predictions_scores
     )
+    # Add average reward scores
+    result["rewards/chosen"] = np.mean(pos_predictions_scores)
+    result["rewards/rejected"] = np.mean(neg_predictions_scores)
     return result
 
 

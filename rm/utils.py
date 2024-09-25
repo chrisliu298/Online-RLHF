@@ -247,6 +247,7 @@ class RewardTrainer(Trainer):
         margin=1.0,
         lambd=0.0,
         log_reward=False,
+        reward_range=None,
         *args,
         **kwargs,
     ):
@@ -309,8 +310,29 @@ class RewardTrainer(Trainer):
         rewards_j = rewards[jidx]
         rewards_k = rewards[kidx]
 
+        if self.reward_range is not None:
+            penalty_j = torch.where(
+                rewards_j > self.reward_range[1],
+                (rewards_j - self.reward_range[1]) ** 2,
+                torch.where(
+                    rewards_j < self.reward_range[0],
+                    (rewards_j - self.reward_range[0]) ** 2,
+                    0,
+                ),
+            ).mean()
+            penalty_k = torch.where(
+                rewards_k > self.reward_range[1],
+                (rewards_k - self.reward_range[1]) ** 2,
+                torch.where(
+                    rewards_k < self.reward_range[0],
+                    (rewards_k - self.reward_range[0]) ** 2,
+                    0,
+                ),
+            ).mean()
+
         if self.loss_type == "bt":
             loss = -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
+            # Add a penalty to constrain the rewards in the range [0, 1]
         elif self.loss_type == "t_log":
             loss = -t_log_sigmoid(rewards_j - rewards_k, self.log_t).mean()
         elif self.loss_type == "focal":
@@ -378,6 +400,9 @@ class RewardTrainer(Trainer):
             loss = (last_layer_loss + intermediate_loss) / (
                 1 + len(intermediate_losses)
             )
+
+        if self.reward_range is not None:
+            loss += self.lambd * penalty_j + self.lambd * penalty_k
 
         if return_outputs:
             return loss, {"rewards_j": rewards_j, "rewards_k": rewards_k}

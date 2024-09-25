@@ -117,6 +117,9 @@ class ScriptArguments:
     neftune_noise_alpha: Optional[float] = field(
         default=None, metadata={"help": "The noise alpha for neftune"}
     )
+    reward_range: Optional[float] = field(
+        default=None, metadata={"help": "The range of the reward"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -213,6 +216,9 @@ trainer = RewardTrainer(
     gamma=script_args.gamma,
     margin=script_args.margin,
     log_reward=script_args.log_reward,
+    reward_range=[-script_args.reward_range, script_args.reward_range]
+    if script_args.reward_range is not None
+    else None,
 )
 try:
     trainer.train(

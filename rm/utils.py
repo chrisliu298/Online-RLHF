@@ -272,6 +272,7 @@ class RewardTrainer(Trainer):
         self.lambd = lambd
         self.margin = margin
         self.log_reward = log_reward
+        self.reward_range = reward_range
 
     def compute_loss(self, model, inputs, return_outputs=False):
         if self.loss_type not in {"sim", "sim_per_layer", "bt_per_layer"}:

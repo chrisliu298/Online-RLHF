@@ -242,6 +242,7 @@ class RewardTrainer(Trainer):
     def __init__(
         self,
         loss_type="bt",
+        temp=1.0,
         log_t=1.0,
         gamma=0.0,
         margin=1.0,
@@ -267,6 +268,7 @@ class RewardTrainer(Trainer):
             "focal_penalty",
         }, f"Invalid loss type: {loss_type}"
         self.loss_type = loss_type
+        self.temp = temp
         self.log_t = log_t
         self.gamma = gamma
         self.lambd = lambd
@@ -332,8 +334,11 @@ class RewardTrainer(Trainer):
             ).mean()
 
         if self.loss_type == "bt":
-            loss = -nn.functional.logsigmoid(rewards_j - rewards_k).mean()
-            # Add a penalty to constrain the rewards in the range [0, 1]
+            rewards_diff = rewards_j - rewards_k
+            if self.temp != 1.0:
+                loss = -nn.functional.logsigmoid(rewards_diff / self.temp).mean()
+            else:
+                loss = -nn.functional.logsigmoid(rewards_diff).mean()
         elif self.loss_type == "t_log":
             loss = -t_log_sigmoid(rewards_j - rewards_k, self.log_t).mean()
         elif self.loss_type == "focal":

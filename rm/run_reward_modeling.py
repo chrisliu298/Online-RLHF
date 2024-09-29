@@ -120,6 +120,9 @@ class ScriptArguments:
     reward_range: Optional[float] = field(
         default=None, metadata={"help": "The range of the reward"}
     )
+    temp: Optional[float] = field(
+        default=1.0, metadata={"help": "The temperature for the reward model"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -214,6 +217,7 @@ trainer = RewardTrainer(
         tokenizer=tokenizer, max_length=script_args.max_length
     ),
     loss_type=script_args.loss_type,
+    temp=script_args.temp,
     log_t=script_args.log_t,
     gamma=script_args.gamma,
     margin=script_args.margin,

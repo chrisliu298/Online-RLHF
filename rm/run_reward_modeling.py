@@ -135,7 +135,7 @@ tokenizer = AutoTokenizer.from_pretrained(
 )
 
 if (
-    "Meta-Llama-3.1-8B-Instruct" in script_args.model_name
+    "Llama-3.1-8B-Instruct" in script_args.model_name
     or "Llama-3_1-Nemotron-51B-Instruct" in script_args.model_name
 ):
     tokenizer.pad_token = "<|finetune_right_pad_id|>"
@@ -174,9 +174,11 @@ training_args = TrainingArguments(
     logging_strategy="steps",
     logging_steps=script_args.logging_steps,
     optim=script_args.optim,
-    lr_scheduler_type=script_args.lr_scheduler_type
-    if "schedule_free" not in script_args.optim
-    else "linear",
+    lr_scheduler_type=(
+        script_args.lr_scheduler_type
+        if "schedule_free" not in script_args.optim
+        else "linear"
+    ),
     warmup_ratio=script_args.warmup_ratio,
     warmup_steps=script_args.warmup_steps,
     report_to="wandb",
@@ -192,16 +194,18 @@ model = AutoModelForSequenceClassification.from_pretrained(
     num_labels=1,
     torch_dtype=torch.bfloat16,
     attn_implementation="flash_attention_2",
-    output_hidden_states=True
-    if script_args.loss_type in {"sim", "sim_per_layer", "bt_per_layer"}
-    else False,
+    output_hidden_states=(
+        True
+        if script_args.loss_type in {"sim", "sim_per_layer", "bt_per_layer"}
+        else False
+    ),
     trust_remote_code=True,
 )
 if script_args.reward_head_init_value is not None:
     torch.nn.init.constant_(model.score.weight, script_args.reward_head_init_value)
 model.config.use_cache = not script_args.gradient_checkpointing
 if (
-    "Meta-Llama-3.1-8B-Instruct" in script_args.model_name
+    "Llama-3.1-8B-Instruct" in script_args.model_name
     or "Qwen2.5-32B-Instruct" in script_args.model_name
     or "Llama-3_1-Nemotron-51B-Instruct" in script_args.model_name
 ):
@@ -222,9 +226,11 @@ trainer = RewardTrainer(
     gamma=script_args.gamma,
     margin=script_args.margin,
     log_reward=script_args.log_reward,
-    reward_range=[-script_args.reward_range, script_args.reward_range]
-    if script_args.reward_range is not None
-    else None,
+    reward_range=(
+        [-script_args.reward_range, script_args.reward_range]
+        if script_args.reward_range is not None
+        else None
+    ),
 )
 try:
     trainer.train(

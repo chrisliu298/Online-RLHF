@@ -17,6 +17,8 @@ from utils import (
     compute_metrics,
 )
 
+torch.cuda.set_per_process_memory_fraction(0.95, torch.cuda.current_device())
+
 
 @dataclass
 class ScriptArguments:

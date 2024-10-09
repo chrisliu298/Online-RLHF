@@ -188,8 +188,8 @@ training_args = TrainingArguments(
     save_total_limit=script_args.save_total_limit,
     use_liger_kernel=script_args.use_liger_kernel,
     neftune_noise_alpha=script_args.neftune_noise_alpha,
-    eval_strategy="steps",
-    eval_steps=script_args.save_steps,
+    # eval_strategy="steps",
+    # eval_steps=script_args.save_steps,
 )
 model = AutoModelForSequenceClassification.from_pretrained(
     script_args.model_name,
@@ -217,7 +217,7 @@ trainer = RewardTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
-    eval_dataset=train_dataset.select(range(128)),
+    # eval_dataset=train_dataset.select(range(128)),
     compute_metrics=compute_metrics,
     data_collator=RewardDataCollatorWithPadding(
         tokenizer=tokenizer, max_length=script_args.max_length

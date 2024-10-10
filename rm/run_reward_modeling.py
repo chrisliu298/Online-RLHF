@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -18,6 +19,8 @@ from utils import (
 )
 
 # torch.cuda.set_per_process_memory_fraction(0.99, torch.cuda.current_device())
+seed = random_seed = random.randint(0, 2**32 - 1)
+data_seed = random.randint(0, 2**32 - 1)
 
 
 @dataclass
@@ -190,6 +193,8 @@ training_args = TrainingArguments(
     neftune_noise_alpha=script_args.neftune_noise_alpha,
     # eval_strategy="steps",
     # eval_steps=script_args.save_steps,
+    seed=seed,
+    data_seed=data_seed,
 )
 model = AutoModelForSequenceClassification.from_pretrained(
     script_args.model_name,
@@ -245,4 +250,9 @@ trainer.save_model(script_args.output_dir)
 tokenizer.save_pretrained(script_args.output_dir)
 # Save script args
 with open(os.path.join(script_args.output_dir, "script_args.json"), "w") as f:
-    json.dump(script_args.__dict__, f)
+    # Convert script_args to a dictionary
+    script_args_dict = script_args.__dict__
+    # Add the random seeds to the dictionary
+    script_args_dict["seed"] = seed
+    script_args_dict["data_seed"] = data_seed
+    json.dump(script_args_dict, f)

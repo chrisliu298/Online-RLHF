@@ -144,7 +144,9 @@ def build_dataset(tokenizer, train_path):
     return dataset
 
 
-def build_dataset_local(tokenizer, train_path, tokenize=True, special_token=""):
+def build_dataset_local(
+    tokenizer, train_path, tokenize=True, special_token="", shuffle=True
+):
     def tokenize_func(sample):
         sample["positive"] = (
             tokenizer.apply_chat_template(
@@ -170,7 +172,9 @@ def build_dataset_local(tokenizer, train_path, tokenize=True, special_token=""):
         sample["attention_mask_k"] = tokenized_neg["attention_mask"]
         return sample
 
-    dataset = load_from_disk(train_path).shuffle(seed=42)
+    dataset = load_from_disk(train_path)
+    if shuffle:
+        dataset = dataset.shuffle(seed=42)
     if not tokenize:
         return dataset
     dataset = dataset.map(tokenize_func, num_proc=8)

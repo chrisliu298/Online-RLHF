@@ -51,7 +51,17 @@ ds_dir = script_args.dataset_name
 output_path = script_args.output_path
 
 rm_name = script_args.reward_name_or_path
-rm_tokenizer = AutoTokenizer.from_pretrained(rm_name, trust_remote_code=True)
+# rm_tokenizer = AutoTokenizer.from_pretrained(rm_name, trust_remote_code=True)
+if "Llama-3.1-8B-Instruct" in rm_name:
+    rm_tokenizer = AutoTokenizer.from_pretrained(
+        "/mnt/data/yuhaoliu/models/hf_tokenizers/Llama-3.1-8B-Instruct",
+        trust_remote_code=True,
+    )
+elif "gemma-2-27b-it" in rm_name:
+    rm_tokenizer = AutoTokenizer.from_pretrained(
+        "/mnt/data/yuhaoliu/models/hf_tokenizers/gemma-2-27b-it",
+        trust_remote_code=True,
+    )
 # device = 0
 
 # rm_pipe = pipeline(

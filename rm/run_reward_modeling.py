@@ -124,9 +124,6 @@ class ScriptArguments:
         default=1.0, metadata={"help": "The temperature for the reward model"}
     )
     seed: Optional[int] = field(default=42, metadata={"help": "The seed"})
-    shuffle: Optional[bool] = field(
-        default=False, metadata={"help": "Shuffle the training data"}
-    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -154,7 +151,6 @@ if script_args.load_data_from_local:
         train_path,
         tokenize=script_args.tokenize_train,
         special_token=script_args.special_token,
-        shuffle=script_args.shuffle,
     )
 
 else:

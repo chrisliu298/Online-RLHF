@@ -62,6 +62,16 @@ elif "gemma-2-27b-it" in rm_name:
         "/mnt/data/yuhaoliu/models/hf_tokenizers/gemma-2-27b-it",
         trust_remote_code=True,
     )
+elif "gemma-2-2b-it" in rm_name:
+    rm_tokenizer = AutoTokenizer.from_pretrained(
+        "/mnt/data/yuhaoliu/models/hf_tokenizers/gemma-2-2b-it",
+        trust_remote_code=True,
+    )
+elif "gemma-2-9b-it" in rm_name:
+    rm_tokenizer = AutoTokenizer.from_pretrained(
+        "/mnt/data/yuhaoliu/models/hf_tokenizers/gemma-2-9b-it",
+        trust_remote_code=True,
+    )
 # device = 0
 
 # rm_pipe = pipeline(

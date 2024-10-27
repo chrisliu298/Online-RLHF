@@ -57,7 +57,12 @@ output_path = script_args.output_path
 
 rm_name = script_args.reward_name_or_path
 # rm_tokenizer = AutoTokenizer.from_pretrained(rm_name, trust_remote_code=True)
-if "Llama-3.1-8B-Instruct" in rm_name:
+if "Llama-3.1-8B-Instruct-NoSys" in rm_name:
+    rm_tokenizer = AutoTokenizer.from_pretrained(
+        "/mnt/data/yuhaoliu/models/hf_tokenizers/Llama-3.1-8B-Instruct-NoSys",
+        trust_remote_code=True,
+    )
+elif "Llama-3.1-8B-Instruct" in rm_name:
     rm_tokenizer = AutoTokenizer.from_pretrained(
         "/mnt/data/yuhaoliu/models/hf_tokenizers/Llama-3.1-8B-Instruct",
         trust_remote_code=True,

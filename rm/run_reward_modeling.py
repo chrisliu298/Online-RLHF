@@ -124,6 +124,9 @@ class ScriptArguments:
         default=1.0, metadata={"help": "The temperature for the reward model"}
     )
     seed: Optional[int] = field(default=42, metadata={"help": "The seed"})
+    add_system_prompt: Optional[bool] = field(
+        default=False, metadata={"help": "Add system prompt to the training data"}
+    )
 
 
 parser = HfArgumentParser(ScriptArguments)
@@ -151,12 +154,13 @@ if script_args.load_data_from_local:
         train_path,
         tokenize=script_args.tokenize_train,
         special_token=script_args.special_token,
+        add_system_prompt=script_args.add_system_prompt,
     )
-
 else:
     raise NotImplementedError("Only local data loading is supported.")
 
 print("Training set:", len(train_dataset))
+print("First example:\n", train_dataset[0])
 
 # Define the trainer
 training_args = TrainingArguments(

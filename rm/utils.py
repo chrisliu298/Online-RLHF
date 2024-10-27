@@ -147,20 +147,44 @@ def build_dataset(tokenizer, train_path):
     return dataset
 
 
-def build_dataset_local(tokenizer, train_path, tokenize=True, special_token=""):
+def build_dataset_local(
+    tokenizer, train_path, tokenize=True, special_token="", add_system_prompt=False
+):
     def tokenize_func(sample):
-        sample["positive"] = (
-            tokenizer.apply_chat_template(
-                sample["chosen"], tokenize=False, add_generation_prompt=False
+        if add_system_prompt:
+            system_prompt = {
+                "role": "system",
+                "content": "You are a good reward model. Please accurately score the provided response based on helpfulness, correctness, coherence, complexity, and verbosity.",
+            }
+            sample["positive"] = (
+                tokenizer.apply_chat_template(
+                    [system_prompt] + sample["chosen"],
+                    tokenize=False,
+                    add_generation_prompt=False,
+                )
+                + special_token
             )
-            + special_token
-        )
-        sample["negative"] = (
-            tokenizer.apply_chat_template(
-                sample["rejected"], tokenize=False, add_generation_prompt=False
+            sample["negative"] = (
+                tokenizer.apply_chat_template(
+                    [system_prompt] + sample["rejected"],
+                    tokenize=False,
+                    add_generation_prompt=False,
+                )
+                + special_token
             )
-            + special_token
-        )
+        else:
+            sample["positive"] = (
+                tokenizer.apply_chat_template(
+                    sample["chosen"], tokenize=False, add_generation_prompt=False
+                )
+                + special_token
+            )
+            sample["negative"] = (
+                tokenizer.apply_chat_template(
+                    sample["rejected"], tokenize=False, add_generation_prompt=False
+                )
+                + special_token
+            )
 
         if tokenizer.bos_token is not None:
             sample["positive"] = sample["positive"].replace(tokenizer.bos_token, "")

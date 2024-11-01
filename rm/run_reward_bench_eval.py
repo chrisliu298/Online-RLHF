@@ -2,7 +2,6 @@
 Adapted from https://github.com/RLHFlow/RLHF-Reward-Modeling/blob/main/useful_code/eval_reward_bench_bt.py
 """
 
-import subprocess
 import warnings
 from dataclasses import dataclass, field
 from typing import Optional
@@ -155,11 +154,6 @@ def get_reward(test_texts):
         )
     return [chosen_logits, rejected_logits]
 
-
-if accelerator.is_main_process:
-    subprocess.run(["screen", "-S", "gpu_util", "-X", "stuff", "\003"])
-    subprocess.run(["sleep", "0.1"])  # Sleep for a moment
-    subprocess.run(["screen", "-S", "gpu_util", "-X", "quit"])
 
 accelerator.wait_for_everyone()
 with accelerator.split_between_processes(ds) as ds_shard:
@@ -355,5 +349,3 @@ if accelerator.is_main_process:
             f.write(f"{col}: {score}\n")
         print(f"Avg: {sum(scores) / len(scores)}")
         f.write(f"Avg: {sum(scores) / len(scores)}\n")
-
-    subprocess.run(["screen", "-dmS", "gpu_util", "/mnt/data/yuhaoliu/run.sh"])

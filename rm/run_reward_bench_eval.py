@@ -114,6 +114,10 @@ df = pd.DataFrame(columns=["id", "subset", "correct"])
 
 def change_of_format(prompt, resp):
     message = [
+        {
+            "role": "system",
+            "content": "You are a good reward model. Please accurately score the provided response based on helpfulness, correctness, coherence, complexity, and verbosity.",
+        },
         {"role": "user", "content": prompt},
         {"role": "assistant", "content": resp},
     ]
